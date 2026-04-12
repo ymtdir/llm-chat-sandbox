@@ -130,6 +130,7 @@ async def create_message(
 erDiagram
     User ||--o{ Conversation : "所有する"
     User ||--o{ Diary : "所有する"
+    User ||--o{ UserFcmToken : "所有する"
     Conversation ||--o{ Message : "含む"
     Conversation }o--|| Character : "参加する"
     Character ||--o{ ScheduledResponse : "予約する"
@@ -143,6 +144,13 @@ erDiagram
         string password_hash
         datetime created_at
         datetime updated_at
+    }
+
+    UserFcmToken {
+        int id PK
+        int user_id FK
+        string fcm_token UK
+        datetime created_at
     }
 
     Character {
@@ -216,6 +224,7 @@ erDiagram
 | --------------------------------- | -------- | -------------------------------------- |
 | `/api/auth/register`              | POST     | ユーザー登録                           |
 | `/api/auth/login`                 | POST     | ログイン（JWTトークン発行）            |
+| `/api/auth/fcm-token`             | PUT      | FCMトークン登録・更新                  |
 | `/api/conversations`              | GET      | 会話一覧取得                           |
 | `/api/conversations/:id/messages` | GET      | 特定会話のメッセージ取得               |
 | `/api/conversations/:id/messages` | POST     | メッセージ送信（AI応答をスケジュール） |
@@ -264,6 +273,16 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
     except WebSocketDisconnect:
         del manager.active_connections[user_id]
 ```
+
+#### FCM（バックエンド ↔ Firebase Cloud Messaging）
+
+| 用途             | 概要                                       |
+| ---------------- | ------------------------------------------ |
+| プッシュ通知送信 | AIからの返信をアプリ閉鎖中のユーザーに通知 |
+
+- バックエンドがFCM APIにリクエストを送り、ブラウザのService Workerが受信
+- WebSocket接続中はWebSocket通知を優先し、切断中はFCM経由でプッシュ通知
+- フロントエンドは初回アクセス時にFCMトークンを取得し、バックエンドに登録する
 
 #### LLM API（バックエンド ↔ Groq）
 
@@ -552,6 +571,7 @@ async def create_message(
   - `ScheduledResponse`テーブルで予約管理
   - APSchedulerで1分ごとにポーリング（`scheduled_at`が現在時刻を過ぎたレコードを取得）
   - 取得したレコードに対してAI応答を生成し、メッセージとして保存
+  - WebSocket接続中はWebSocket通知、切断中はFCMでプッシュ通知
 - **返信タイミング計算**:
   - `ResponseTimingCalculator`ドメインサービスで計算
   - 性格（`personality`）、職業（`occupation`）、現在時刻を考慮

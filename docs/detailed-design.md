@@ -93,7 +93,6 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(254), unique=True, nullable=False, index=True)  # RFC 5322準拠
     password_hash = Column(String(128), nullable=False)
-    fcm_token = Column(String(255), nullable=True)  # FCMデバイストークン（プッシュ通知用）
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 ```
@@ -122,6 +121,32 @@ class UserResponse(BaseModel):
 
 - email: RFC 5322準拠、最大254文字、ユニーク
 - password: 最低8文字、bcryptでハッシュ化（ソルトラウンド12）
+
+---
+
+### エンティティ: UserFcmToken（FCMデバイストークン）
+
+**SQLAlchemyモデル**:
+
+```python
+# app/models/user_fcm_token.py
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy.sql import func
+from app.core.database import Base
+
+class UserFcmToken(Base):
+    __tablename__ = "user_fcm_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    fcm_token = Column(String(255), nullable=False, unique=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+```
+
+**制約**:
+
+- fcm_token: ユニーク（同じトークンの重複登録を防ぐ）
+- user_id 削除時にCASCADEで関連トークンも削除
 
 ---
 
@@ -316,6 +341,7 @@ class Diary(Base):
 erDiagram
     User ||--o{ Conversation : "所有する"
     User ||--o{ Diary : "所有する"
+    User ||--o{ UserFcmToken : "所有する"
     Conversation ||--o{ Message : "含む"
     Conversation }o--|| Character : "参加する"
     Character ||--o{ ScheduledResponse : "予約する"
@@ -327,9 +353,15 @@ erDiagram
         int id PK
         string email UK
         string password_hash
-        string fcm_token
         datetime created_at
         datetime updated_at
+    }
+
+    UserFcmToken {
+        int id PK
+        int user_id FK
+        string fcm_token UK
+        datetime created_at
     }
 
     Character {
