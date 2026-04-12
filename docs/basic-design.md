@@ -572,7 +572,9 @@ async def process_scheduled_responses():
     pending_responses = await get_pending_responses(scheduled_at__lte=now)
 
     for response in pending_responses:
-        await generate_and_send_response(response)
+        # バッチ読み: 最後のAI返信以降のユーザーメッセージを全取得してまとめて処理
+        unanswered_messages = await get_unanswered_user_messages(response.conversation_id)
+        await generate_and_send_response(response, unanswered_messages)
         await mark_as_sent(response.id)
 
 # アプリ起動時に登録
