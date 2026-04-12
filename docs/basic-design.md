@@ -4,45 +4,45 @@
 
 ### 言語・ランタイム
 
-| 技術     | バージョン | 選定理由                                                                                                                                                     |
-| -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Python   | 3.12       | async/await対応で非同期処理が得意。Groq SDKが充実。豊富なエコシステムでプロトタイプ開発が迅速。型ヒント（Type Hints）で型安全性を確保                      |
-| TypeScript | 5.x      | フロントエンド用。型安全性により開発時のバグを削減。IDEのサポートが充実しており、保守性が高い                                                               |
-| Node.js  | 22.x LTS   | フロントエンドビルド環境として使用                                                                                                                           |
+| 技術       | バージョン | 選定理由                                                                                                                              |
+| ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Python     | 3.12       | async/await対応で非同期処理が得意。Groq SDKが充実。豊富なエコシステムでプロトタイプ開発が迅速。型ヒント（Type Hints）で型安全性を確保 |
+| TypeScript | 5.x        | フロントエンド用。型安全性により開発時のバグを削減。IDEのサポートが充実しており、保守性が高い                                         |
+| Node.js    | 22.x LTS   | フロントエンドビルド環境として使用                                                                                                    |
 
 ### フレームワーク・ライブラリ（バックエンド）
 
-| 技術                | バージョン | 用途                     | 選定理由                                                                                                                                   |
-| ------------------- | ---------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| FastAPI             | 0.115+     | Webフレームワーク        | 非同期処理のネイティブサポート。Pydantic v2統合で強力なバリデーション。自動OpenAPIドキュメント生成。WebSocket標準サポート                 |
-| SQLAlchemy          | 2.0        | ORM（async対応）         | Python最大のORM。async/awaitサポート。型安全なクエリビルダー。PostgreSQLとの親和性が高い                                                   |
-| Alembic             | 1.13+      | マイグレーション         | SQLAlchemyの公式マイグレーションツール。バージョン管理が容易                                                                               |
-| APScheduler         | 3.10+      | ジョブスケジューリング   | FastAPIと統合しやすい。非同期ジョブサポート。返信タイミング制御と日記生成の定期実行に使用                                                   |
-| groq                | latest     | LLM API連携              | Llama 3.3 70Bを利用した自然な会話生成と日記要約を実現。OpenAI比で約1/6のコスト。Pythonライブラリが最も成熟                                 |
-| passlib[bcrypt]     | 1.7+       | パスワードハッシュ化     | セキュアなパスワード保存のための業界標準ライブラリ。bcryptアルゴリズム対応                                                                 |
-| python-jose[cryptography] | 3.3+ | JWT認証                  | トークンベース認証の実装。FastAPIとの統合が容易                                                                                            |
-| python-multipart    | 0.0.9+     | フォームデータ解析       | FastAPIのフォーム/ファイルアップロード対応                                                                                                 |
-| websockets          | 12.0+      | WebSocket               | FastAPIのWebSocketサポートに使用                                                                                                           |
-| pydantic            | 2.x        | バリデーション           | FastAPIに組み込み。強力な型ヒントベースのバリデーション。ランタイム検証とエディタ補完を両立                                                |
-| pydantic-settings   | 2.x        | 環境変数管理             | 型安全な環境変数読み込み                                                                                                                   |
+| 技術                      | バージョン | 用途                   | 選定理由                                                                                                                  |
+| ------------------------- | ---------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| FastAPI                   | 0.115+     | Webフレームワーク      | 非同期処理のネイティブサポート。Pydantic v2統合で強力なバリデーション。自動OpenAPIドキュメント生成。WebSocket標準サポート |
+| SQLAlchemy                | 2.0        | ORM（async対応）       | Python最大のORM。async/awaitサポート。型安全なクエリビルダー。PostgreSQLとの親和性が高い                                  |
+| Alembic                   | 1.13+      | マイグレーション       | SQLAlchemyの公式マイグレーションツール。バージョン管理が容易                                                              |
+| APScheduler               | 3.10+      | ジョブスケジューリング | FastAPIと統合しやすい。非同期ジョブサポート。返信タイミング制御と日記生成の定期実行に使用                                 |
+| groq                      | latest     | LLM API連携            | Llama 3.3 70Bを利用した自然な会話生成と日記要約を実現。OpenAI比で約1/6のコスト。Pythonライブラリが最も成熟                |
+| passlib[bcrypt]           | 1.7+       | パスワードハッシュ化   | セキュアなパスワード保存のための業界標準ライブラリ。bcryptアルゴリズム対応                                                |
+| python-jose[cryptography] | 3.3+       | JWT認証                | トークンベース認証の実装。FastAPIとの統合が容易                                                                           |
+| python-multipart          | 0.0.9+     | フォームデータ解析     | FastAPIのフォーム/ファイルアップロード対応                                                                                |
+| websockets                | 12.0+      | WebSocket              | FastAPIのWebSocketサポートに使用                                                                                          |
+| pydantic                  | 2.x        | バリデーション         | FastAPIに組み込み。強力な型ヒントベースのバリデーション。ランタイム検証とエディタ補完を両立                               |
+| pydantic-settings         | 2.x        | 環境変数管理           | 型安全な環境変数読み込み                                                                                                  |
 
 ### フレームワーク・ライブラリ（フロントエンド）
 
-| 技術  | バージョン | 用途                       | 選定理由                                                                     |
-| ----- | ---------- | -------------------------- | ---------------------------------------------------------------------------- |
-| React | 19.x       | UIライブラリ               | コンポーネントベースの設計で再利用性が高い。豊富なエコシステム               |
-| Vite  | 6.x        | 高速ビルドツール           | 開発サーバーが高速。HMR（Hot Module Replacement）で開発体験が向上           |
+| 技術  | バージョン | 用途             | 選定理由                                                          |
+| ----- | ---------- | ---------------- | ----------------------------------------------------------------- |
+| React | 19.x       | UIライブラリ     | コンポーネントベースの設計で再利用性が高い。豊富なエコシステム    |
+| Vite  | 6.x        | 高速ビルドツール | 開発サーバーが高速。HMR（Hot Module Replacement）で開発体験が向上 |
 
 ### 開発ツール
 
-| 技術     | バージョン | 用途                                    |
-| -------- | ---------- | --------------------------------------- |
-| uvicorn  | 0.30+      | ASGIサーバー（開発・本番）              |
-| pytest   | 8.x        | テストフレームワーク                    |
-| ruff     | 0.6+       | 超高速Linter/Formatter（Pythonコード）  |
-| mypy     | 1.11+      | 静的型チェック                          |
-| ESLint   | 9.x        | コード品質チェック（フロントエンド）    |
-| Prettier | 3.x        | コードフォーマッター（フロントエンド）  |
+| 技術     | バージョン | 用途                                   |
+| -------- | ---------- | -------------------------------------- |
+| uvicorn  | 0.30+      | ASGIサーバー（開発・本番）             |
+| pytest   | 8.x        | テストフレームワーク                   |
+| ruff     | 0.6+       | 超高速Linter/Formatter（Pythonコード） |
+| mypy     | 1.11+      | 静的型チェック                         |
+| ESLint   | 9.x        | コード品質チェック（フロントエンド）   |
+| Prettier | 3.x        | コードフォーマッター（フロントエンド） |
 
 ## システムアーキテクチャ
 
@@ -51,6 +51,7 @@
 **レイヤードアーキテクチャ + ドメイン駆動設計（DDD）の要素**を採用する。
 
 **選定理由**:
+
 - プロトタイプとして迅速に開発できるシンプルさを保ちつつ、ビジネスロジック（キャラクター制御、返信タイミング計算）を明確に分離
 - FastAPIの非同期処理を活かした効率的なリソース利用
 - 将来的なUI変更（外部チャットプラットフォーム連携）に耐えられる柔軟性
@@ -78,6 +79,7 @@ graph TB
 - **禁止される操作**: 直接的なDB操作、ビジネスロジックの実装
 
 **実装例**:
+
 ```python
 # app/api/routes/messages.py
 from fastapi import APIRouter, Depends, BackgroundTasks
@@ -109,6 +111,7 @@ async def create_message(
 - **禁止される操作**: データベースアクセス、外部API呼び出し、フレームワーク依存
 
 **主要ドメインモデル**:
+
 - `Character`: AIキャラクター設定を管理（性格、職業、生活パターン）
 - `ResponseTimingCalculator`: 返信タイミングを計算（性格・時間帯・職業を考慮）
 - `DiaryGenerator`: 会話から日記を生成するロジック
@@ -221,6 +224,7 @@ erDiagram
 | `/api/characters`                 | GET      | 利用可能なキャラクター一覧取得         |
 
 **自動生成ドキュメント**:
+
 - OpenAPI: `http://localhost:8000/docs` (Swagger UI)
 - ReDoc: `http://localhost:8000/redoc`
 
@@ -232,6 +236,7 @@ erDiagram
 | `message:typing` | サーバー→クライアント | AIが「入力中」状態を示す（UX向上のため）   |
 
 **実装例**:
+
 ```python
 # app/api/websocket.py
 from fastapi import WebSocket, WebSocketDisconnect
@@ -262,8 +267,8 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
 
 #### LLM API（バックエンド ↔ Groq）
 
-| 用途         | APIエンドポイント                       | モデル                  | 概要                                                 |
-| ------------ | --------------------------------------- | ----------------------- | ---------------------------------------------------- |
+| 用途         | APIエンドポイント                          | モデル                  | 概要                                                 |
+| ------------ | ------------------------------------------ | ----------------------- | ---------------------------------------------------- |
 | 会話生成     | `https://api.groq.com/v1/chat/completions` | llama-3.3-70b-versatile | キャラクター設定をシステムプロンプトで反映し会話生成 |
 | 日記要約生成 | `https://api.groq.com/v1/chat/completions` | llama-3.3-70b-versatile | 1日の会話履歴から日記テキストを自動生成              |
 
@@ -414,6 +419,7 @@ class DiaryGenerator:
   - `.env`ファイルは`.gitignore`で除外
 
 **実装例**:
+
 ```python
 # app/core/config.py
 from pydantic_settings import BaseSettings
@@ -440,6 +446,7 @@ settings = Settings()
   - SQLインジェクション対策（SQLAlchemyのパラメータ化クエリで自動対応）
 
 **実装例**:
+
 ```python
 # app/schemas/message.py
 from pydantic import BaseModel, Field, field_validator
@@ -475,6 +482,7 @@ class MessageCreate(BaseModel):
   - Viteによる高速ビルドとTree Shaking
 
 **実装例**:
+
 ```python
 # app/repositories/message_repository.py
 from sqlalchemy import select
@@ -506,6 +514,7 @@ async def get_recent_messages(
   - タイムアウト時は再試行ロジックを実装（最大3回）
 
 **実装例**:
+
 ```python
 # app/services/conversation_service.py
 from fastapi import BackgroundTasks
@@ -549,6 +558,7 @@ async def create_message(
   - ランダム性を持たせて自然な揺らぎを再現
 
 **実装例**:
+
 ```python
 # app/scheduler/jobs.py
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
