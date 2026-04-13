@@ -31,5 +31,18 @@
       "pr-creation",
       "pr-review"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath' | { read -r f; [ -f \"$f\" ] && ./node_modules/.bin/prettier --write --ignore-unknown \"$f\"; } 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
   }
 }

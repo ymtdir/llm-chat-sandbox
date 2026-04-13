@@ -16,6 +16,7 @@ AI Diary Companionは、AIキャラクターとの自然な会話を通じて自
 ## 技術スタック
 
 ### バックエンド
+
 - **言語**: Python 3.12
 - **フレームワーク**: FastAPI 0.115+
 - **データベース**: PostgreSQL 17.x
@@ -25,11 +26,13 @@ AI Diary Companionは、AIキャラクターとの自然な会話を通じて自
 - **認証**: JWT (python-jose)
 
 ### フロントエンド
+
 - **言語**: TypeScript
 - **フレームワーク**: React
 - **ランタイム**: Node.js 22.x LTS
 
 ### インフラ
+
 - **プッシュ通知**: Firebase Cloud Messaging
 
 ## 開発環境セットアップ
@@ -103,12 +106,12 @@ cp .env.example .env
 
 **重要な環境変数：**
 
-| 変数名 | 説明 | 例 |
-|--------|------|-----|
-| `DATABASE_URL` | PostgreSQL接続URL | `postgresql+psycopg://postgres:postgres@localhost:5432/ai_diary_companion` |
-| `SECRET_KEY` | JWT認証用シークレットキー | `openssl rand -hex 32` で生成 |
-| `GROQ_API_KEY` | Groq API キー | https://console.groq.com/ から取得 |
-| `FIREBASE_CREDENTIALS_PATH` | Firebase認証情報ファイルパス | `./firebase-credentials.json` |
+| 変数名                      | 説明                         | 例                                                                         |
+| --------------------------- | ---------------------------- | -------------------------------------------------------------------------- |
+| `DATABASE_URL`              | PostgreSQL接続URL            | `postgresql+psycopg://postgres:postgres@localhost:5432/ai_diary_companion` |
+| `SECRET_KEY`                | JWT認証用シークレットキー    | `openssl rand -hex 32` で生成                                              |
+| `GROQ_API_KEY`              | Groq API キー                | https://console.groq.com/ から取得                                         |
+| `FIREBASE_CREDENTIALS_PATH` | Firebase認証情報ファイルパス | `./firebase-credentials.json`                                              |
 
 #### 5. データベースマイグレーション
 
@@ -137,6 +140,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 アクセス先:
+
 - API: http://localhost:8000
 - API ドキュメント (Swagger UI): http://localhost:8000/docs
 - API ドキュメント (ReDoc): http://localhost:8000/redoc
@@ -149,6 +153,7 @@ npm run dev
 ```
 
 アクセス先:
+
 - フロントエンド: http://localhost:3000
 
 ## テスト
@@ -227,6 +232,7 @@ llm-chat-sandbox/
 ```
 
 **type:**
+
 - `feat`: 新機能
 - `fix`: バグ修正
 - `refactor`: リファクタリング
