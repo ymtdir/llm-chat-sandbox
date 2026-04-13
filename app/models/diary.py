@@ -26,7 +26,9 @@ class Diary(Base):
     )
     diary_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    metadata: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    diary_metadata: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON, nullable=True, name="metadata"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

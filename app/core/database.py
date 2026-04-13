@@ -1,5 +1,7 @@
 """Database configuration and session management."""
 
+import os
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -12,7 +14,9 @@ class Base(DeclarativeBase):
 
 # Database URL will be configured from environment variables
 # Example: postgresql+asyncpg://user:password@localhost/dbname
-DATABASE_URL = "postgresql+asyncpg://postgres:password@localhost/ai_diary_companion"
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost/ai_diary_companion"
+)
 
 # Create async engine
 engine = create_async_engine(
