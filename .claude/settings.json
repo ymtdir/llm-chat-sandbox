@@ -1,4 +1,23 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(gh:*)",
+      "Skill(issue-creation)",
+      "Skill(issue-resolution)",
+      "Skill(pr-creation)",
+      "Skill(pr-review)"
+    ]
+  },
+  "sandbox": {
+    "network": {
+      "allowedDomains": [
+        "github.com",
+        "api.github.com",
+        "codeload.github.com",
+        "*.githubusercontent.com"
+      ]
+    }
+  },
   "enabledPlugins": {
     "code-review@claude-plugins-official": true
   },
@@ -10,27 +29,25 @@
       }
     }
   },
-  "permissions": {
-    "allow": [
-      "Bash(gh api:*)"
-    ],
-    "ask": [
-      "Bash(git push:*)"
-    ]
-  },
-  "sandbox": {
-    "network": {
-      "allowedDomains": [
-        "github.com"
-      ]
-    }
-  },
   "skills": {
     "allowed": [
       "issue-creation",
       "issue-resolution",
       "pr-creation",
       "pr-review"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath' | { read -r f; [ -f \"$f\" ] && ./node_modules/.bin/prettier --write --ignore-unknown \"$f\"; } 2>/dev/null || true"
+          }
+        ]
+      }
     ]
   }
 }

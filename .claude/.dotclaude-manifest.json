@@ -16,18 +16,12 @@
       ],
       "settings": {
         "permissions": {
-          "allow": [
-            "Bash(gh api:*)"
-          ],
-          "ask": [
-            "Bash(git push:*)"
-          ]
+          "allow": ["Bash(gh api:*)"],
+          "ask": ["Bash(git push:*)"]
         },
         "sandbox": {
           "network": {
-            "allowedDomains": [
-              "github.com"
-            ]
+            "allowedDomains": ["github.com"]
           }
         },
         "enabledPlugins": {
