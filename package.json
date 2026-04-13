@@ -1,0 +1,12 @@
+{
+  "name": "llm-chat-sandbox",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write --ignore-unknown .",
+    "format:check": "prettier --check --ignore-unknown ."
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  }
+}
