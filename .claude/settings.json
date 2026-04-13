@@ -1,0 +1,36 @@
+{
+  "enabledPlugins": {
+    "code-review@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/anthropics/claude-plugins-official.git"
+      }
+    }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(gh api:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)"
+    ]
+  },
+  "sandbox": {
+    "network": {
+      "allowedDomains": [
+        "github.com"
+      ]
+    }
+  },
+  "skills": {
+    "allowed": [
+      "issue-creation",
+      "issue-resolution",
+      "pr-creation",
+      "pr-review"
+    ]
+  }
+}

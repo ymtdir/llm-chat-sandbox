@@ -1,0 +1,56 @@
+{
+  "packs": {
+    "github-toolkit": {
+      "files": [
+        "agents/pr-reviewer.md",
+        "commands/create-pr.md",
+        "commands/create-issue.md",
+        "commands/init-issues.md",
+        "commands/resolve-issue.md",
+        "skills/pr-creation",
+        "skills/pr-review",
+        "skills/issue-creation",
+        "skills/issue-resolution",
+        "rules/label-definitions.md",
+        "rules/commit-conventions.md"
+      ],
+      "settings": {
+        "permissions": {
+          "allow": [
+            "Bash(gh api:*)"
+          ],
+          "ask": [
+            "Bash(git push:*)"
+          ]
+        },
+        "sandbox": {
+          "network": {
+            "allowedDomains": [
+              "github.com"
+            ]
+          }
+        },
+        "enabledPlugins": {
+          "code-review@claude-plugins-official": true
+        },
+        "extraKnownMarketplaces": {
+          "claude-plugins-official": {
+            "source": {
+              "source": "git",
+              "url": "https://github.com/anthropics/claude-plugins-official.git"
+            }
+          }
+        },
+        "skills": {
+          "allowed": [
+            "issue-creation",
+            "issue-resolution",
+            "pr-creation",
+            "pr-review"
+          ]
+        }
+      }
+    }
+  },
+  "base_settings": {}
+}
