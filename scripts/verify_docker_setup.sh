@@ -45,12 +45,8 @@ else
 fi
 
 # Check Docker Compose
-if command -v docker-compose &> /dev/null || docker compose version &> /dev/null 2>&1; then
-    if command -v docker-compose &> /dev/null; then
-        COMPOSE_VERSION=$(docker-compose --version | cut -d' ' -f4 | sed 's/,$//')
-    else
-        COMPOSE_VERSION=$(docker compose version | cut -d' ' -f4)
-    fi
+if docker compose version &> /dev/null 2>&1; then
+    COMPOSE_VERSION=$(docker compose version | cut -d' ' -f4)
     echo -e "${GREEN}✓${NC} Docker Compose: $COMPOSE_VERSION"
 else
     echo -e "${RED}✗${NC} Docker Compose: not found"
@@ -71,7 +67,7 @@ echo "2. Project Files"
 echo "----------------"
 
 # Check required files
-FILES=("Dockerfile" "docker-compose.yml" ".dockerignore" "pyproject.toml" ".env.example")
+FILES=("Dockerfile" "docker compose.yml" ".dockerignore" "pyproject.toml" ".env.example")
 for file in "${FILES[@]}"; do
     if [ -f "$file" ]; then
         echo -e "${GREEN}✓${NC} $file exists"
@@ -122,7 +118,7 @@ if docker info &> /dev/null; then
         fi
     else
         echo -e "${BLUE}ℹ${NC} PostgreSQL container: not running"
-        echo "  Run: docker-compose up -d postgres"
+        echo "  Run: docker compose up -d postgres"
     fi
 
     # Check app container
@@ -142,7 +138,7 @@ if docker info &> /dev/null; then
         fi
     else
         echo -e "${BLUE}ℹ${NC} App container: not running"
-        echo "  Run: docker-compose up -d app"
+        echo "  Run: docker compose up -d app"
     fi
 fi
 
@@ -157,7 +153,7 @@ if docker images --format "{{.Repository}}:{{.Tag}}" | grep -q "llm-chat-sandbox
     echo "  Size: $IMAGE_SIZE"
 else
     echo -e "${BLUE}ℹ${NC} App image: not built"
-    echo "  Run: docker-compose build"
+    echo "  Run: docker compose build"
 fi
 
 if docker images --format "{{.Repository}}:{{.Tag}}" | grep -q "postgres:17"; then
@@ -171,19 +167,19 @@ echo ""
 echo "5. Quick Start Commands"
 echo "-----------------------"
 echo -e "${BLUE}Start all services:${NC}"
-echo "  docker-compose up -d"
+echo "  docker compose up -d"
 echo ""
 echo -e "${BLUE}View logs:${NC}"
-echo "  docker-compose logs -f"
+echo "  docker compose logs -f"
 echo ""
 echo -e "${BLUE}Run migrations:${NC}"
-echo "  docker-compose --profile migrate up migrate"
+echo "  docker compose --profile migrate up migrate"
 echo ""
 echo -e "${BLUE}Stop services:${NC}"
-echo "  docker-compose down"
+echo "  docker compose down"
 echo ""
 echo -e "${BLUE}Clean everything:${NC}"
-echo "  docker-compose down -v"
+echo "  docker compose down -v"
 
 echo ""
 echo "====================================="
@@ -193,7 +189,7 @@ if [ "$ALL_PASSED" = true ]; then
     echo "Next steps:"
     echo "1. Copy .env.example to .env if not done"
     echo "2. Set GROQ_API_KEY in .env file"
-    echo "3. Run: docker-compose up -d"
+    echo "3. Run: docker compose up -d"
     echo "4. Access API at http://localhost:8000"
 else
     echo -e "${RED}❌ Some requirements are missing.${NC}"

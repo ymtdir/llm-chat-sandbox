@@ -34,20 +34,20 @@ SECRET_KEY=$(openssl rand -hex 32)
 
 ```bash
 # すべてのサービスを起動
-docker-compose up
+docker compose up
 
 # バックグラウンドで起動
-docker-compose up -d
+docker compose up -d
 
 # 初回起動時（イメージのビルドが必要）
-docker-compose up --build
+docker compose up --build
 ```
 
 ### 3. データベースマイグレーション（初回のみ）
 
 ```bash
 # マイグレーションの実行
-docker-compose --profile migrate up migrate
+docker compose --profile migrate up migrate
 ```
 
 ### 4. アクセス確認
@@ -62,16 +62,16 @@ docker-compose --profile migrate up migrate
 
 ```bash
 # ログの確認
-docker-compose logs -f app
+docker compose logs -f app
 
 # 特定のサービスのログを見る
-docker-compose logs -f postgres
+docker compose logs -f postgres
 
 # コンテナに入る
-docker-compose exec app bash
+docker compose exec app bash
 
 # PostgreSQLに接続
-docker-compose exec postgres psql -U postgres -d ai_diary_companion
+docker compose exec postgres psql -U postgres -d ai_diary_companion
 ```
 
 ### コードの変更
@@ -79,47 +79,47 @@ docker-compose exec postgres psql -U postgres -d ai_diary_companion
 - `app/`ディレクトリ内のコードを変更すると、自動的にリロードされます
 - `pyproject.toml`を変更した場合は、イメージの再ビルドが必要です：
   ```bash
-  docker-compose build app
-  docker-compose up
+  docker compose build app
+  docker compose up
   ```
 
 ### テストの実行
 
 ```bash
 # コンテナ内でテストを実行
-docker-compose exec app pytest
+docker compose exec app pytest
 
 # カバレッジレポート付き
-docker-compose exec app pytest --cov=app --cov-report=html
+docker compose exec app pytest --cov=app --cov-report=html
 ```
 
 ### データベース操作
 
 ```bash
 # データベースに接続
-docker-compose exec postgres psql -U postgres -d ai_diary_companion
+docker compose exec postgres psql -U postgres -d ai_diary_companion
 
 # テストデータベースに接続
-docker-compose exec postgres psql -U postgres -d ai_diary_companion_test
+docker compose exec postgres psql -U postgres -d ai_diary_companion_test
 
 # データベースのバックアップ
-docker-compose exec postgres pg_dump -U postgres ai_diary_companion > backup.sql
+docker compose exec postgres pg_dump -U postgres ai_diary_companion > backup.sql
 
 # データベースのリストア
-docker-compose exec -T postgres psql -U postgres ai_diary_companion < backup.sql
+docker compose exec -T postgres psql -U postgres ai_diary_companion < backup.sql
 ```
 
 ## クリーンアップ
 
 ```bash
 # コンテナを停止
-docker-compose down
+docker compose down
 
 # コンテナとボリュームを削除（データも削除される）
-docker-compose down -v
+docker compose down -v
 
 # イメージも含めて完全削除
-docker-compose down -v --rmi all
+docker compose down -v --rmi all
 ```
 
 ## トラブルシューティング
@@ -129,7 +129,7 @@ docker-compose down -v --rmi all
 ```bash
 # ポート8000が使用中の場合
 lsof -i :8000
-# プロセスをkillするか、docker-compose.ymlでポートを変更
+# プロセスをkillするか、docker compose.ymlでポートを変更
 
 # ポート5432が使用中の場合
 lsof -i :5432
@@ -140,25 +140,25 @@ lsof -i :5432
 
 ```bash
 # ログを確認
-docker-compose logs app
+docker compose logs app
 
 # イメージを再ビルド
-docker-compose build --no-cache app
-docker-compose up
+docker compose build --no-cache app
+docker compose up
 ```
 
 ### データベース接続エラー
 
 ```bash
 # PostgreSQLコンテナの状態を確認
-docker-compose ps postgres
+docker compose ps postgres
 
 # ヘルスチェックのステータスを確認
-docker-compose ps
+docker compose ps
 
 # データベースを再作成
-docker-compose down -v
-docker-compose up
+docker compose down -v
+docker compose up
 ```
 
 ## Docker環境の構成
@@ -190,7 +190,7 @@ Docker Compose内で自動設定される環境変数：
 本番環境では以下の点を変更してください：
 
 1. `.env`ファイルの`SECRET_KEY`を強力なランダム値に変更
-2. `docker-compose.yml`の`DEBUG`を`false`に設定
+2. `docker compose.yml`の`DEBUG`を`false`に設定
 3. PostgreSQLの`POSTGRES_PASSWORD`を強力なパスワードに変更
 4. ボリュームのバックアップ戦略を策定
 5. HTTPSの設定（リバースプロキシ等）

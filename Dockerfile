@@ -11,17 +11,14 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# pyproject.tomlとREADMEをコピー（依存関係のキャッシュ最適化）
-COPY pyproject.toml README.md ./
-
 # pipをアップグレード
 RUN pip install --no-cache-dir --upgrade pip
 
+# アプリケーションコードをコピー（editable install は app/ を必要とする）
+COPY . .
+
 # 依存関係をインストール
 RUN pip install --no-cache-dir -e .
-
-# アプリケーションコードをコピー
-COPY . .
 
 # ポート8000を公開
 EXPOSE 8000
