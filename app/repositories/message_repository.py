@@ -33,11 +33,10 @@ async def get_recent(
     result = await db.execute(
         select(Message)
         .where(Message.conversation_id == conversation_id)
-        .order_by(Message.sent_at.desc())
+        .order_by(Message.sent_at.asc())
         .limit(limit)
     )
-    messages = list(result.scalars().all())
-    return list(reversed(messages))  # Return in chronological order
+    return list(result.scalars().all())
 
 
 async def get_unanswered_user_messages(
