@@ -2,15 +2,12 @@
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.core.database import Base, get_db
 from app.core.security import hash_password, verify_password
 from app.main import app
-from app.models.user import User
 
 # Test database setup
 SQLALCHEMY_TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -44,7 +41,7 @@ async def async_client():
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    async with TestingSessionLocal() as session:
+    async with TestingSessionLocal():
         yield TestClient(app)
 
     async with engine_test.begin() as conn:

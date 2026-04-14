@@ -1,7 +1,7 @@
 """Security utilities for authentication and authorization."""
 
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastapi import Depends, HTTPException, status
@@ -40,9 +40,9 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
     """Create a JWT access token."""
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -62,11 +62,11 @@ async def get_current_user(
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int = payload.get("sub")
-        if user_id is None:
+        user_id = payload.get("sub")
+        if user_id is None or not isinstance(user_id, int):
             raise credentials_exception
-    except (JWTError, ValidationError):
-        raise credentials_exception
+    except (JWTError, ValidationError) as e:
+        raise credentials_exception from e
 
     # Get user from database
     from sqlalchemy import select
