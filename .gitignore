@@ -1,6 +1,9 @@
 # Claude
 settings.local.json
 
+# Docker local override
+docker-compose.override.yml
+
 # Node
 node_modules/
 npm-debug.log*
