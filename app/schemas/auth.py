@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class UserCreate(BaseModel):
@@ -22,14 +22,11 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     """Schema for user response."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     email: str
     created_at: datetime
-
-    class Config:
-        """Pydantic config."""
-
-        from_attributes = True
 
 
 class Token(BaseModel):
