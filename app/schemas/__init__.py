@@ -1,6 +1,11 @@
 """Pydantic schemas for request/response validation."""
 
 from app.schemas.auth import Token, TokenData, UserCreate, UserLogin, UserResponse
+from app.schemas.character import (
+    CharacterCreate,
+    CharacterListResponse,
+    CharacterResponse,
+)
 
 __all__ = [
     "UserCreate",
@@ -8,4 +13,7 @@ __all__ = [
     "UserResponse",
     "Token",
     "TokenData",
+    "CharacterCreate",
+    "CharacterResponse",
+    "CharacterListResponse",
 ]
