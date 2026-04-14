@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class UserCreate(BaseModel):
@@ -45,4 +45,23 @@ class TokenData(BaseModel):
 class FcmTokenUpdate(BaseModel):
     """Schema for FCM token update."""
 
-    fcm_token: str = Field(..., min_length=1, max_length=255)
+    fcm_token: str = Field(
+        ...,
+        min_length=100,
+        max_length=255,
+        description="Firebase Cloud Messaging registration token",
+    )
+
+    @field_validator("fcm_token")
+    @classmethod
+    def validate_fcm_token(cls, v: str) -> str:
+        """Validate FCM token format."""
+        # FCM tokens typically contain alphanumeric, colons, underscores, and hyphens
+        import re
+
+        if not re.match(r"^[a-zA-Z0-9:_-]+$", v):
+            raise ValueError(
+                "Invalid FCM token format. Token should only contain "
+                "alphanumeric characters, colons, underscores, and hyphens."
+            )
+        return v

@@ -83,7 +83,13 @@ async def update_fcm_token(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, str]:
-    """Register or update FCM token for push notifications."""
+    """Register or update FCM token for push notifications.
+
+    FCM tokens are device-specific. When a user logs in on a new device
+    or after app reinstall, a new token is generated. If the same device
+    token is used by a different user (e.g., shared device scenario),
+    we reassign it to the current user.
+    """
     # Check if token already exists
     result = await db.execute(
         select(UserFcmToken).where(UserFcmToken.fcm_token == token_data.fcm_token)
@@ -91,7 +97,8 @@ async def update_fcm_token(
     existing_token = result.scalar_one_or_none()
 
     if existing_token:
-        # Update user_id if token belongs to different user
+        # Reassign token to current user (handles device sharing/user switching)
+        # This ensures push notifications are sent to the currently logged-in user
         if existing_token.user_id != current_user.id:
             existing_token.user_id = current_user.id
             await db.commit()
