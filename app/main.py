@@ -2,8 +2,13 @@
 
 import os
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
+
+load_dotenv()
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.routes import auth
 
 app = FastAPI(
     title="AI Diary Companion",
@@ -36,3 +41,7 @@ async def root() -> dict[str, str]:
 async def health_check() -> dict[str, str]:
     """ヘルスチェックエンドポイント"""
     return {"status": "healthy"}
+
+
+# Include routers
+app.include_router(auth.router)

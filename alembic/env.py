@@ -5,6 +5,9 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
+from dotenv import load_dotenv
+
+load_dotenv()
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
@@ -49,7 +52,7 @@ def get_database_url() -> str:
 
     # Use default for local development
     # Note: In production, always use environment variable
-    return "postgresql+asyncpg://postgres:password@localhost/ai_diary_companion"
+    return "postgresql+psycopg://postgres:postgres@localhost/ai_diary_companion"
 
 
 def run_migrations_offline() -> None:
