@@ -1,64 +1,9 @@
 """Tests for authentication endpoints."""
 
-import asyncio
-
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
-
-from app.core.database import Base, get_db
 from app.core.security import hash_password, verify_password
-from app.main import app
-
-# Test database setup
-SQLALCHEMY_TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
-
-engine_test = create_async_engine(
-    SQLALCHEMY_TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-
-TestingSessionLocal = async_sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine_test,
-    class_=AsyncSession,
-)
 
 
-async def override_get_db():
-    """Override database dependency for testing."""
-    async with TestingSessionLocal() as session:
-        yield session
-
-
-app.dependency_overrides[get_db] = override_get_db
-
-
-async def _create_tables():
-    async with engine_test.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-
-async def _drop_tables():
-    async with engine_test.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
-
-@pytest.fixture(autouse=True)
-def setup_database():
-    """Create and drop tables for each test (sync wrapper)."""
-    asyncio.run(_create_tables())
-    yield
-    asyncio.run(_drop_tables())
-
-
-client = TestClient(app)
-
-
-def test_password_hashing():
+def test_password_hashing(client):
     """Test password hashing and verification."""
     password = "test_password123"
     hashed = hash_password(password)
@@ -71,7 +16,7 @@ def test_password_hashing():
     assert verify_password("wrong_password", hashed) is False
 
 
-def test_register_user():
+def test_register_user(client):
     """Test user registration endpoint."""
     response = client.post(
         "/api/auth/register",
@@ -90,7 +35,7 @@ def test_register_user():
     assert "password_hash" not in data
 
 
-def test_register_duplicate_user():
+def test_register_duplicate_user(client):
     """Test duplicate user registration."""
     # Register first user
     client.post(
@@ -114,7 +59,7 @@ def test_register_duplicate_user():
     assert "already registered" in response.json()["detail"].lower()
 
 
-def test_register_invalid_email():
+def test_register_invalid_email(client):
     """Test registration with invalid email."""
     response = client.post(
         "/api/auth/register",
@@ -127,7 +72,7 @@ def test_register_invalid_email():
     assert response.status_code == 422
 
 
-def test_register_short_password():
+def test_register_short_password(client):
     """Test registration with password too short."""
     response = client.post(
         "/api/auth/register",
@@ -140,7 +85,7 @@ def test_register_short_password():
     assert response.status_code == 422
 
 
-def test_login_success():
+def test_login_success(client):
     """Test successful login."""
     # First register a user
     client.post(
@@ -166,7 +111,7 @@ def test_login_success():
     assert data["token_type"] == "bearer"
 
 
-def test_login_wrong_password():
+def test_login_wrong_password(client):
     """Test login with wrong password."""
     # First register a user
     client.post(
@@ -190,7 +135,7 @@ def test_login_wrong_password():
     assert "incorrect" in response.json()["detail"].lower()
 
 
-def test_login_nonexistent_user():
+def test_login_nonexistent_user(client):
     """Test login with non-existent user."""
     response = client.post(
         "/api/auth/login",
@@ -203,7 +148,7 @@ def test_login_nonexistent_user():
     assert response.status_code == 401
 
 
-def test_fcm_token_update_unauthorized():
+def test_fcm_token_update_unauthorized(client):
     """Test FCM token update without authentication."""
     response = client.put(
         "/api/auth/fcm-token",
@@ -215,7 +160,7 @@ def test_fcm_token_update_unauthorized():
     assert response.status_code == 401
 
 
-def test_fcm_token_update_authorized():
+def test_fcm_token_update_authorized(client):
     """Test FCM token update with authentication."""
     # Register and login first
     client.post(

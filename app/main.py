@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 load_dotenv()
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
-from app.api.routes import auth
+from app.api.routes import auth, characters  # noqa: E402
 
 app = FastAPI(
     title="AI Diary Companion",
@@ -45,3 +45,4 @@ async def health_check() -> dict[str, str]:
 
 # Include routers
 app.include_router(auth.router)
+app.include_router(characters.router)
