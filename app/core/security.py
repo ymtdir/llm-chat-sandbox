@@ -19,7 +19,7 @@ from app.models.user import User
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT settings
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY: str = os.getenv("SECRET_KEY", "")
 if not SECRET_KEY:
     raise ValueError(
         "SECRET_KEY environment variable is required. "
