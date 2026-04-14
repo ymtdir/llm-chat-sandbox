@@ -13,8 +13,8 @@ from sqlalchemy import select
 
 load_dotenv()
 
-from app.core.database import AsyncSessionLocal
-from app.models.character import Character
+from app.core.database import AsyncSessionLocal  # noqa: E402
+from app.models.character import Character  # noqa: E402
 
 
 async def seed_initial_character():

@@ -4,17 +4,18 @@ import asyncio
 import os
 from logging.config import fileConfig
 
-from alembic import context
 from dotenv import load_dotenv
 
+from alembic import context
+
 load_dotenv()
-from sqlalchemy import pool
-from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlalchemy import pool  # noqa: E402
+from sqlalchemy.engine import Connection  # noqa: E402
+from sqlalchemy.ext.asyncio import async_engine_from_config  # noqa: E402
 
 # Import our models to ensure they're registered with the metadata
-from app.core.database import Base
-from app.models import (  # noqa: F401
+from app.core.database import Base  # noqa: E402
+from app.models import (  # noqa: E402, F401
     Character,
     Conversation,
     Diary,
