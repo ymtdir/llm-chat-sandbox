@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from app.models.message import Message
 
 
-class ResponseStatus(str, enum.Enum):
+class ResponseStatus(enum.StrEnum):
     """Scheduled response status."""
 
     PENDING = "pending"
@@ -52,10 +52,10 @@ class ScheduledResponse(Base):
     )
 
     # Relationships
-    character: Mapped["Character"] = relationship("Character", back_populates="scheduled_responses")
-    conversation: Mapped["Conversation"] = relationship(
+    character: Mapped[Character] = relationship("Character", back_populates="scheduled_responses")
+    conversation: Mapped[Conversation] = relationship(
         "Conversation", back_populates="scheduled_responses"
     )
-    trigger_message: Mapped["Message"] = relationship(
+    trigger_message: Mapped[Message] = relationship(
         "Message", back_populates="triggered_responses"
     )

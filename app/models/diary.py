@@ -34,4 +34,4 @@ class Diary(Base):
     )
 
     # Relationships
-    user: Mapped["User"] = relationship("User", back_populates="diaries")
+    user: Mapped[User] = relationship("User", back_populates="diaries")

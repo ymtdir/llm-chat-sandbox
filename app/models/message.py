@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from app.models.scheduled_response import ScheduledResponse
 
 
-class SenderType(str, enum.Enum):
+class SenderType(enum.StrEnum):
     """Message sender type."""
 
     USER = "user"
@@ -40,7 +40,7 @@ class Message(Base):
     )
 
     # Relationships
-    conversation: Mapped["Conversation"] = relationship("Conversation", back_populates="messages")
-    triggered_responses: Mapped[list["ScheduledResponse"]] = relationship(
+    conversation: Mapped[Conversation] = relationship("Conversation", back_populates="messages")
+    triggered_responses: Mapped[list[ScheduledResponse]] = relationship(
         "ScheduledResponse", back_populates="trigger_message"
     )

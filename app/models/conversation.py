@@ -37,11 +37,11 @@ class Conversation(Base):
     )
 
     # Relationships
-    user: Mapped["User"] = relationship("User", back_populates="conversations")
-    character: Mapped["Character"] = relationship("Character", back_populates="conversations")
-    messages: Mapped[list["Message"]] = relationship(
+    user: Mapped[User] = relationship("User", back_populates="conversations")
+    character: Mapped[Character] = relationship("Character", back_populates="conversations")
+    messages: Mapped[list[Message]] = relationship(
         "Message", back_populates="conversation", cascade="all, delete-orphan"
     )
-    scheduled_responses: Mapped[list["ScheduledResponse"]] = relationship(
+    scheduled_responses: Mapped[list[ScheduledResponse]] = relationship(
         "ScheduledResponse", back_populates="conversation", cascade="all, delete-orphan"
     )

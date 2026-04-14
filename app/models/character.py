@@ -28,9 +28,9 @@ class Character(Base):
     )
 
     # Relationships
-    conversations: Mapped[list["Conversation"]] = relationship(
+    conversations: Mapped[list[Conversation]] = relationship(
         "Conversation", back_populates="character"
     )
-    scheduled_responses: Mapped[list["ScheduledResponse"]] = relationship(
+    scheduled_responses: Mapped[list[ScheduledResponse]] = relationship(
         "ScheduledResponse", back_populates="character"
     )

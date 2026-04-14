@@ -31,13 +31,13 @@ class User(Base):
     )
 
     # Relationships
-    conversations: Mapped[list["Conversation"]] = relationship(
+    conversations: Mapped[list[Conversation]] = relationship(
         "Conversation", back_populates="user", cascade="all, delete-orphan"
     )
-    fcm_tokens: Mapped[list["UserFcmToken"]] = relationship(
+    fcm_tokens: Mapped[list[UserFcmToken]] = relationship(
         "UserFcmToken", back_populates="user", cascade="all, delete-orphan"
     )
-    diaries: Mapped[list["Diary"]] = relationship(
+    diaries: Mapped[list[Diary]] = relationship(
         "Diary", back_populates="user", cascade="all, delete-orphan"
     )
 
@@ -57,4 +57,4 @@ class UserFcmToken(Base):
     )
 
     # Relationships
-    user: Mapped["User"] = relationship("User", back_populates="fcm_tokens")
+    user: Mapped[User] = relationship("User", back_populates="fcm_tokens")
