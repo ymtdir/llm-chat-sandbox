@@ -1,5 +1,7 @@
 """Tests for authentication endpoints."""
 
+import asyncio
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -35,17 +37,22 @@ async def override_get_db():
 app.dependency_overrides[get_db] = override_get_db
 
 
-@pytest.fixture
-async def async_client():
-    """Create test client with test database."""
+async def _create_tables():
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    async with TestingSessionLocal():
-        yield TestClient(app)
 
+async def _drop_tables():
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+
+
+@pytest.fixture(autouse=True)
+def setup_database():
+    """Create and drop tables for each test (sync wrapper)."""
+    asyncio.run(_create_tables())
+    yield
+    asyncio.run(_drop_tables())
 
 
 client = TestClient(app)
@@ -201,7 +208,7 @@ def test_fcm_token_update_unauthorized():
     response = client.put(
         "/api/auth/fcm-token",
         json={
-            "fcm_token": "test_fcm_token_123",
+            "fcm_token": "a" * 150,
         },
     )
 
@@ -233,7 +240,7 @@ def test_fcm_token_update_authorized():
     response = client.put(
         "/api/auth/fcm-token",
         json={
-            "fcm_token": "test_fcm_token_123",
+            "fcm_token": "a" * 150,
         },
         headers={"Authorization": f"Bearer {token}"},
     )
