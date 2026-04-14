@@ -16,7 +16,7 @@ class Base(DeclarativeBase):
 # Database URL will be configured from environment variables
 # Example: postgresql+asyncpg://user:password@localhost/dbname
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost/ai_diary_companion"
+    "DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost/ai_diary_companion"
 )
 
 # Create async engine
