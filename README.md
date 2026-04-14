@@ -17,7 +17,7 @@ AI Diary Companionは、AIキャラクターとの自然な会話を通じて自
 
 ### バックエンド
 
-- **言語**: Python 3.12
+- **言語**: Python 3.13
 - **フレームワーク**: FastAPI 0.115+
 - **データベース**: PostgreSQL 17.x
 - **ORM**: SQLAlchemy 2.0 (async)
@@ -41,9 +41,8 @@ AI Diary Companionは、AIキャラクターとの自然な会話を通じて自
 
 以下のソフトウェアがインストールされていることを確認してください：
 
-- Python 3.12+
-- Node.js 22.x LTS
-- PostgreSQL 17.x
+- Python 3.13+
+- Docker / Docker Compose
 - Git
 
 ### セットアップ手順
@@ -59,75 +58,73 @@ cd llm-chat-sandbox
 
 ```bash
 # 仮想環境の作成
-python3.12 -m venv venv
+python3 -m venv .venv
 
 # 仮想環境の有効化
-# macOS/Linux:
-source venv/bin/activate
-# Windows:
-# venv\Scripts\activate
+source .venv/bin/activate
 
 # 依存関係のインストール
 pip install -e ".[dev]"
 ```
 
-#### 3. PostgreSQL データベースの準備
+#### 3. 環境変数の設定
 
-```bash
-# PostgreSQLにログイン
-psql -U postgres
+`.env` ファイルをプロジェクトルートに作成し、以下の内容を設定してください：
 
-# データベースの作成
-CREATE DATABASE ai_diary_companion;
-CREATE DATABASE ai_diary_companion_test;  -- テスト用
+```env
+# データベース接続設定
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=ai_diary_companion
 
-# ユーザーの作成（必要に応じて）
-CREATE USER ai_diary_user WITH PASSWORD 'your-password';
-GRANT ALL PRIVILEGES ON DATABASE ai_diary_companion TO ai_diary_user;
-GRANT ALL PRIVILEGES ON DATABASE ai_diary_companion_test TO ai_diary_user;
+DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/ai_diary_companion
+ASYNC_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/ai_diary_companion
+TEST_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/ai_diary_companion_test
 
-# 終了
-\q
-```
-
-#### 4. 環境変数の設定
-
-```bash
-# .env.exampleをコピー
-cp .env.example .env
-
-# .envファイルを編集
-# 以下の値を必ず設定してください：
-# - DATABASE_URL: PostgreSQL接続URL
-# - SECRET_KEY: JWT用シークレットキー (openssl rand -hex 32 で生成)
-# - GROQ_API_KEY: Groq APIキー (https://console.groq.com/ から取得)
-# - FIREBASE_CREDENTIALS_PATH: Firebase認証情報JSONファイルのパス
+# アプリケーション設定
+SECRET_KEY=your-secret-key-here  # openssl rand -hex 32 で生成
+GROQ_API_KEY=your-groq-api-key   # https://console.groq.com/ から取得
+ENVIRONMENT=development
+DEBUG=true
+LOG_LEVEL=INFO
 ```
 
 **重要な環境変数：**
 
-| 変数名                      | 説明                         | 例                                                                         |
-| --------------------------- | ---------------------------- | -------------------------------------------------------------------------- |
-| `DATABASE_URL`              | PostgreSQL接続URL            | `postgresql+psycopg://postgres:postgres@localhost:5432/ai_diary_companion` |
-| `SECRET_KEY`                | JWT認証用シークレットキー    | `openssl rand -hex 32` で生成                                              |
-| `GROQ_API_KEY`              | Groq API キー                | https://console.groq.com/ から取得                                         |
-| `FIREBASE_CREDENTIALS_PATH` | Firebase認証情報ファイルパス | `./firebase-credentials.json`                                              |
+| 変数名         | 説明                      | 例                                                                         |
+| -------------- | ------------------------- | -------------------------------------------------------------------------- |
+| `DATABASE_URL` | PostgreSQL接続URL         | `postgresql+psycopg://postgres:postgres@localhost:5432/ai_diary_companion` |
+| `SECRET_KEY`   | JWT認証用シークレットキー | `openssl rand -hex 32` で生成                                              |
+| `GROQ_API_KEY` | Groq API キー             | https://console.groq.com/ から取得                                         |
+
+#### 4. DBの起動
+
+```bash
+docker compose up -d
+```
+
+PostgreSQLとpgAdminが起動します。DBは自動的に作成されます。
+
+| サービス | URL                   |
+| -------- | --------------------- |
+| pgAdmin  | http://localhost:5050 |
+
+pgAdminのログイン情報（デフォルト）：
+
+- メール: `admin@example.com`
+- パスワード: `admin`
+
+pgAdminからDBへの接続情報：
+
+- ホスト: `postgres`
+- ポート: `5432`
+- ユーザー名: `postgres`
+- パスワード: `postgres`
 
 #### 5. データベースマイグレーション
 
 ```bash
-# Alembicの初期化（初回のみ）
-alembic init alembic
-
-# マイグレーションの実行
 alembic upgrade head
-```
-
-#### 6. フロントエンドのセットアップ（今後実装）
-
-```bash
-cd frontend
-npm install
 ```
 
 ### 開発サーバーの起動
@@ -135,8 +132,7 @@ npm install
 #### バックエンド (FastAPI)
 
 ```bash
-# 開発モードで起動（ホットリロード有効）
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload
 ```
 
 アクセス先:
@@ -167,9 +163,6 @@ pytest --cov=app --cov-report=html
 
 # 特定のテストファイルを実行
 pytest tests/unit/services/test_conversation_service.py
-
-# テストをウォッチモードで実行
-pytest --watch
 ```
 
 ## コード品質チェック
@@ -197,23 +190,13 @@ llm-chat-sandbox/
 │   ├── core/                # コア機能（設定、セキュリティ、DB）
 │   ├── models/              # SQLAlchemyモデル（データレイヤー）
 │   ├── schemas/             # Pydanticスキーマ（バリデーション）
-│   ├── api/                 # APIレイヤー（routes, deps, websocket）
-│   ├── services/            # サービスレイヤー（ビジネスロジック）
-│   ├── domain/              # ドメインレイヤー（ドメインモデル）
-│   ├── repositories/        # リポジトリ（データアクセス）
-│   └── scheduler/           # スケジューラー（バックグラウンドジョブ）
+│   ├── api/                 # APIレイヤー
+│   │   └── routes/          # エンドポイント定義
+│   └── services/            # サービスレイヤー（ビジネスロジック）
 ├── alembic/                 # マイグレーション
 ├── tests/                   # テストコード
-│   ├── unit/
-│   ├── integration/
-│   └── e2e/
-├── frontend/                # フロントエンド（React）
-├── docs/                    # プロジェクトドキュメント
-│   ├── requirements.md      # 要件定義書
-│   ├── basic-design.md      # 基本設計書
-│   ├── detailed-design.md   # 詳細設計書
-│   └── development-guide.md # 開発ガイドライン
-├── .env.example             # 環境変数テンプレート
+├── docker-compose.yml       # DB・pgAdmin用
+├── .env                     # 環境変数（gitignore済み）
 ├── pyproject.toml           # Python依存関係・設定
 ├── alembic.ini              # Alembic設定
 └── README.md                # このファイル
@@ -227,8 +210,6 @@ llm-chat-sandbox/
 
 ```
 <type>: <subject>
-
-<body>
 ```
 
 **type:**
@@ -252,23 +233,20 @@ llm-chat-sandbox/
 ### PostgreSQL接続エラー
 
 ```bash
-# PostgreSQLが起動しているか確認
-pg_isready
+# コンテナの状態確認
+docker compose ps
 
-# PostgreSQLのステータス確認
-# macOS (Homebrew):
-brew services list
-# Linux:
-sudo systemctl status postgresql
+# コンテナのログ確認
+docker compose logs postgres
 ```
 
 ### Python仮想環境のエラー
 
 ```bash
 # 仮想環境を削除して再作成
-rm -rf venv
-python3.12 -m venv venv
-source venv/bin/activate
+rm -rf .venv
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
