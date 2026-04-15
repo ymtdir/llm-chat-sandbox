@@ -6,6 +6,15 @@ from app.schemas.character import (
     CharacterListResponse,
     CharacterResponse,
 )
+from app.schemas.conversation import (
+    ConversationCreate,
+    ConversationListResponse,
+    ConversationResponse,
+    ConversationWithMessagesResponse,
+    MessageCreate,
+    MessageListResponse,
+    MessageResponse,
+)
 
 __all__ = [
     "UserCreate",
@@ -16,4 +25,11 @@ __all__ = [
     "CharacterCreate",
     "CharacterResponse",
     "CharacterListResponse",
+    "ConversationCreate",
+    "ConversationResponse",
+    "ConversationWithMessagesResponse",
+    "ConversationListResponse",
+    "MessageCreate",
+    "MessageResponse",
+    "MessageListResponse",
 ]
