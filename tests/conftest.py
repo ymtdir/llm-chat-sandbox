@@ -61,3 +61,59 @@ def setup_database():
 def client() -> TestClient:
     """FastAPIテストクライアントのフィクスチャー"""
     return TestClient(app)
+
+
+@pytest.fixture
+async def db() -> AsyncSession:
+    """Async database session fixture for direct repository tests."""
+    async with TestingSessionLocal() as session:
+        yield session
+
+
+@pytest.fixture
+async def sample_user(db: AsyncSession):
+    """Create a sample user for testing."""
+    from app.repositories import user_repository
+
+    user = await user_repository.create(
+        db=db,
+        email="test@example.com",
+        password_hash="hashed_password",
+    )
+    await db.flush()
+    return user
+
+
+@pytest.fixture
+async def sample_character(db: AsyncSession):
+    """Create a sample character for testing."""
+    from app.repositories import character_repository
+
+    character = await character_repository.create(
+        db=db,
+        name="Test Character",
+        config={
+            "system_prompt": "You are a test character.",
+            "response_patterns": {
+                "base_delay_minutes": {"min": 5, "max": 15},
+                "randomness_factor": 0.2,
+                "reply_probability": 0.95,
+            },
+        },
+    )
+    await db.flush()
+    return character
+
+
+@pytest.fixture
+async def sample_conversation(db: AsyncSession, sample_user, sample_character):
+    """Create a sample conversation for testing."""
+    from app.repositories import conversation_repository
+
+    conversation = await conversation_repository.create(
+        db=db,
+        user_id=sample_user.id,
+        character_id=sample_character.id,
+    )
+    await db.flush()
+    return conversation

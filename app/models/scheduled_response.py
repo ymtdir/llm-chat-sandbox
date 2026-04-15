@@ -23,6 +23,7 @@ class ResponseStatus(enum.StrEnum):
     PENDING = "pending"
     SENT = "sent"
     CANCELLED = "cancelled"
+    FAILED = "failed"
 
 
 class ScheduledResponse(Base):
@@ -47,6 +48,10 @@ class ScheduledResponse(Base):
         Enum(ResponseStatus), default=ResponseStatus.PENDING, nullable=False, index=True
     )
     response_config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    sent_message_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("messages.id"), nullable=True
+    )
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -57,5 +62,14 @@ class ScheduledResponse(Base):
         "Conversation", back_populates="scheduled_responses"
     )
     trigger_message: Mapped[Message] = relationship(
-        "Message", back_populates="triggered_responses"
+        "Message",
+        back_populates="triggered_responses",
+        foreign_keys=[trigger_message_id],
+        overlaps="sent_message",
+    )
+    sent_message: Mapped[Message | None] = relationship(
+        "Message",
+        foreign_keys=[sent_message_id],
+        post_update=True,
+        overlaps="trigger_message",
     )
