@@ -1,10 +1,11 @@
 """Conversation service for business logic."""
 
 import html
-from datetime import datetime, timedelta
+from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domain.response_timing import ResponseTimingCalculator
 from app.models.character import Character
 from app.models.conversation import Conversation
 from app.models.message import Message, SenderType
@@ -61,13 +62,12 @@ async def send_message(
         sender_id=user_id,
     )
 
-    # Schedule AI response based on character config
-    response_patterns = character.config.get("response_patterns", {})
-    base_delay = response_patterns.get("base_delay_minutes", {"min": 5, "max": 15})
-
-    # Calculate scheduled time (using min delay for simplicity in this implementation)
-    delay_minutes = base_delay.get("min", 5)
-    scheduled_at = datetime.now() + timedelta(minutes=delay_minutes)
+    # Calculate response delay using ResponseTimingCalculator
+    current_time = datetime.now(UTC)
+    delay = ResponseTimingCalculator.calculate_response_delay(
+        character.config, current_time
+    )
+    scheduled_at = current_time + delay
 
     # Create scheduled response
     scheduled_response = ScheduledResponse(

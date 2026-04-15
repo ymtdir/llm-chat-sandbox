@@ -42,5 +42,8 @@ class Message(Base):
     # Relationships
     conversation: Mapped[Conversation] = relationship("Conversation", back_populates="messages")
     triggered_responses: Mapped[list[ScheduledResponse]] = relationship(
-        "ScheduledResponse", back_populates="trigger_message"
+        "ScheduledResponse",
+        back_populates="trigger_message",
+        foreign_keys="[ScheduledResponse.trigger_message_id]",
+        overlaps="sent_message",
     )
