@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -52,10 +53,44 @@ async def register(
 
 @router.post("/login", response_model=Token)
 async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, str]:
+    """Login user and return JWT token (OAuth2 compatible).
+
+    For OAuth2 compatibility, the username field accepts email addresses.
+    Use this endpoint with Swagger UI's Authorize button.
+    """
+    # Authenticate user (username field contains the email)
+    result = await db.execute(select(User).where(User.email == form_data.username))
+    user = result.scalar_one_or_none()
+
+    if not user or not verify_password(form_data.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Create access token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": str(user.id)},
+        expires_delta=access_token_expires,
+    )
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.post("/token", response_model=Token)
+async def login_json(
     credentials: UserLogin,
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, str]:
-    """Login user and return JWT token."""
+    """Login user with JSON body (alternative to OAuth2 form).
+
+    Use this endpoint if you prefer JSON format with email/password fields.
+    """
     # Authenticate user
     result = await db.execute(select(User).where(User.email == credentials.email))
     user = result.scalar_one_or_none()

@@ -1,6 +1,5 @@
 """Scheduler jobs for processing AI responses."""
 
-import asyncio
 import logging
 from datetime import datetime
 
@@ -8,10 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.database import engine
 from app.models.message import SenderType
-from app.repositories import character_repository
-from app.repositories import conversation_repository
-from app.repositories import message_repository
-from app.repositories import scheduled_response_repository
+from app.repositories import (
+    character_repository,
+    conversation_repository,
+    message_repository,
+    scheduled_response_repository,
+)
 from app.services.llm_service import LLMService
 
 logger = logging.getLogger(__name__)
@@ -56,16 +57,7 @@ async def process_pending_responses() -> None:
 
             # Process each conversation group
             for conv_id, responses in conversation_groups.items():
-                try:
-                    await _process_conversation_responses(db, conv_id, responses)
-                except Exception as e:
-                    logger.error(f"Error processing conversation {conv_id}: {e}", exc_info=True)
-                    # Mark all responses in this group as failed
-                    for response in responses:
-                        await scheduled_response_repository.mark_as_failed(
-                            db, response.id, str(e)
-                        )
-                    await db.commit()
+                await _process_conversation_responses(db, conv_id, responses)
 
         except Exception as e:
             logger.error(f"Error in process_pending_responses: {e}", exc_info=True)
@@ -85,63 +77,90 @@ async def _process_conversation_responses(
         conversation_id: ID of the conversation
         responses: List of pending scheduled responses for this conversation
     """
-    # Get conversation and character
-    conversation = await conversation_repository.get_by_id(db, conversation_id)
-    if not conversation:
-        raise ValueError(f"Conversation {conversation_id} not found")
-
-    character = await character_repository.get_by_id(db, conversation.character_id)
-    if not character:
-        raise ValueError(f"Character {conversation.character_id} not found")
-
-    # Get conversation history
-    messages = await message_repository.get_recent(db, conversation_id, limit=50)
-
-    # Build conversation history for LLM
-    conversation_history = []
-    for msg in messages:
-        role = "user" if msg.sender_type == SenderType.USER else "assistant"
-        conversation_history.append({"role": role, "content": msg.content})
-
-    # Get system prompt from character config
-    system_prompt = character.config.get("system_prompt", "You are a helpful assistant.")
-
-    # Generate AI response
-    llm_service = LLMService()
     try:
-        ai_response = llm_service.generate_response(
-            system_prompt=system_prompt,
-            conversation_history=conversation_history,
+        # Get conversation and character
+        conversation = await conversation_repository.get_by_id(db, conversation_id)
+        if not conversation:
+            error_msg = f"Conversation {conversation_id} not found"
+            logger.error(error_msg)
+            for response in responses:
+                await scheduled_response_repository.mark_as_failed(db, response.id, error_msg)
+            await db.commit()
+            return
+
+        character = await character_repository.get_by_id(db, conversation.character_id)
+        if not character:
+            error_msg = f"Character {conversation.character_id} not found"
+            logger.error(error_msg)
+            for response in responses:
+                await scheduled_response_repository.mark_as_failed(db, response.id, error_msg)
+            await db.commit()
+            return
+
+        # Get conversation history
+        messages = await message_repository.get_recent(db, conversation_id, limit=50)
+
+        # Build conversation history for LLM
+        conversation_history = []
+        for msg in messages:
+            role = "user" if msg.sender_type == SenderType.USER else "assistant"
+            conversation_history.append({"role": role, "content": msg.content})
+
+        # Get system prompt from character config
+        system_prompt = character.config.get("system_prompt", "You are a helpful assistant.")
+
+        # Generate AI response
+        llm_service = LLMService()
+        try:
+            ai_response = llm_service.generate_response(
+                system_prompt=system_prompt,
+                conversation_history=conversation_history,
+            )
+        except Exception as e:
+            error_msg = f"LLM generation failed: {str(e)}"
+            logger.error(f"{error_msg} for conversation {conversation_id}", exc_info=True)
+            # Mark all responses in this batch as failed
+            for response in responses:
+                await scheduled_response_repository.mark_as_failed(db, response.id, error_msg)
+            await db.commit()
+            return
+
+        # Save AI response as a message
+        ai_message = await message_repository.create(
+            db=db,
+            conversation_id=conversation_id,
+            content=ai_response,
+            sender_type=SenderType.CHARACTER,
+            sender_id=character.id,
         )
+        await db.flush()
+
+        # Mark all responses in this batch as sent (batch reading)
+        for response in responses:
+            try:
+                await scheduled_response_repository.mark_as_sent(db, response.id, ai_message.id)
+            except Exception as e:
+                # Log but don't fail the whole batch if marking fails
+                logger.error(
+                    f"Failed to mark response {response.id} as sent: {e}", exc_info=True
+                )
+
+        await db.commit()
+        logger.info(
+            f"Processed {len(responses)} responses for conversation {conversation_id}, "
+            f"created message {ai_message.id}"
+        )
+
     except Exception as e:
-        logger.error(f"LLM generation failed for conversation {conversation_id}: {e}")
-        raise
-
-    # Save AI response as a message
-    ai_message = await message_repository.create(
-        db=db,
-        conversation_id=conversation_id,
-        content=ai_response,
-        sender_type=SenderType.CHARACTER,
-        sender_id=character.id,
-    )
-    await db.flush()
-
-    # Mark all responses in this batch as sent (batch reading)
-    for response in responses:
-        await scheduled_response_repository.mark_as_sent(db, response.id, ai_message.id)
-
-    await db.commit()
-    logger.info(
-        f"Processed {len(responses)} responses for conversation {conversation_id}, "
-        f"created message {ai_message.id}"
-    )
-
-
-def run_process_pending_responses() -> None:
-    """Synchronous wrapper for APScheduler compatibility.
-
-    APScheduler requires a synchronous function, so this wrapper
-    runs the async process_pending_responses using asyncio.run().
-    """
-    asyncio.run(process_pending_responses())
+        # Catch-all for unexpected errors
+        logger.error(
+            f"Unexpected error processing conversation {conversation_id}: {e}", exc_info=True
+        )
+        for response in responses:
+            try:
+                await scheduled_response_repository.mark_as_failed(
+                    db, response.id, f"Unexpected error: {str(e)}"
+                )
+            except Exception as mark_error:
+                logger.error(f"Failed to mark response as failed: {mark_error}")
+        await db.commit()
