@@ -56,44 +56,6 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
     return encoded_jwt
 
 
-async def get_current_user_from_token(token: str) -> User:
-    """Get user from JWT token (for WebSocket authentication).
-
-    Args:
-        token: JWT token string
-
-    Returns:
-        Authenticated User object
-
-    Raises:
-        JWTError: If token is invalid or expired
-        ValueError: If user not found in database
-    """
-    from app.core.database import AsyncSessionLocal
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        sub = payload.get("sub")
-        if sub is None:
-            raise JWTError("Token missing 'sub' claim")
-        try:
-            user_id = int(sub)
-        except (TypeError, ValueError) as e:
-            raise JWTError(f"Invalid 'sub' claim: {sub}") from e
-    except JWTError as e:
-        raise JWTError(f"Invalid token: {e}") from e
-
-    # Get user from database
-    async with AsyncSessionLocal() as db:
-        result = await db.execute(select(User).where(User.id == user_id))
-        user = result.scalar_one_or_none()
-
-    if user is None:
-        raise ValueError(f"User {user_id} not found")
-
-    return user
-
-
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db),

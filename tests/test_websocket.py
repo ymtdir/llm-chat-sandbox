@@ -51,6 +51,7 @@ async def test_websocket_successful_connection_unit():
     from unittest.mock import AsyncMock, patch
 
     from app.api.routes.ws import websocket_endpoint
+    from app.api.websocket import ConnectionManager
     from app.models.user import User
 
     # Mock user from authentication
@@ -63,30 +64,35 @@ async def test_websocket_successful_connection_unit():
     mock_websocket.receive_text = AsyncMock(side_effect=["ping", Exception("disconnect")])
     mock_websocket.send_text = AsyncMock()
 
+    # Create mock connection manager
+    mock_manager = MagicMock(spec=ConnectionManager)
+    mock_manager.connect = AsyncMock()
+    mock_manager.disconnect = MagicMock()
+
     # Mock authentication
-    with patch("app.api.routes.ws.get_current_user_from_token", return_value=mock_user):
-        with patch("app.api.routes.ws.manager") as mock_manager:
-            mock_manager.connect = AsyncMock()
-            mock_manager.disconnect = MagicMock()
+    with patch("app.api.routes.ws._get_current_user_from_token", return_value=mock_user):
+        # Call the endpoint directly with mocked manager
+        # (will raise Exception("disconnect") to exit loop)
+        try:
+            await websocket_endpoint(mock_websocket, user_id=1, manager=mock_manager)
+        except Exception:
+            pass
 
-            # Call the endpoint (will raise Exception("disconnect") to exit loop)
-            try:
-                await websocket_endpoint(mock_websocket, user_id=1)
-            except Exception:
-                pass
+        # Verify connection was established
+        mock_manager.connect.assert_called_once_with(1, mock_websocket)
 
-            # Verify connection was established
-            mock_manager.connect.assert_called_once_with(1, mock_websocket)
-
-            # Verify ping/pong worked
-            mock_websocket.send_text.assert_called_once_with("pong")
+        # Verify ping/pong worked
+        mock_websocket.send_text.assert_called_once_with("pong")
 
 
 async def test_connection_manager_send_message(db: AsyncSession, sample_user):
     """Test ConnectionManager.send_message functionality."""
     from unittest.mock import AsyncMock
 
-    from app.api.websocket import manager
+    from app.api.websocket import ConnectionManager
+
+    # Create isolated manager instance for this test
+    manager = ConnectionManager()
 
     # Mock WebSocket with AsyncMock for async methods
     mock_websocket = MagicMock()
@@ -109,7 +115,10 @@ async def test_connection_manager_send_message(db: AsyncSession, sample_user):
 
 async def test_connection_manager_send_message_user_not_connected():
     """Test sending message to non-connected user (should not raise error)."""
-    from app.api.websocket import manager
+    from app.api.websocket import ConnectionManager
+
+    # Create isolated manager instance for this test
+    manager = ConnectionManager()
 
     # Try to send message to user that's not connected
     # Should not raise an error
@@ -154,7 +163,10 @@ async def test_connection_manager_send_message_error_cleanup():
     """Test that failed message sending removes the connection."""
     from unittest.mock import AsyncMock
 
-    from app.api.websocket import manager
+    from app.api.websocket import ConnectionManager
+
+    # Create isolated manager instance for this test
+    manager = ConnectionManager()
 
     # Mock WebSocket that raises error on send
     mock_websocket = MagicMock()
@@ -178,7 +190,10 @@ async def test_connection_manager_broadcast_error_cleanup():
     """Test that failed broadcast sending removes problematic connections."""
     from unittest.mock import AsyncMock
 
-    from app.api.websocket import manager
+    from app.api.websocket import ConnectionManager
+
+    # Create isolated manager instance for this test
+    manager = ConnectionManager()
 
     # Mock WebSocket that works
     mock_ws_good = MagicMock()

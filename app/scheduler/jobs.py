@@ -5,7 +5,7 @@ from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.api.websocket import manager
+from app.api.deps import get_connection_manager
 from app.core.database import engine
 from app.models.message import SenderType
 from app.repositories import (
@@ -154,7 +154,8 @@ async def _process_conversation_responses(
 
         # Send WebSocket notification to the user
         try:
-            await manager.send_message(
+            connection_manager = get_connection_manager()
+            await connection_manager.send_message(
                 user_id=conversation.user_id,
                 message={
                     "type": "new_message",

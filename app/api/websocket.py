@@ -76,7 +76,3 @@ class ConnectionManager:
         # Clean up disconnected users
         for user_id in disconnected_users:
             self.disconnect(user_id)
-
-
-# Global connection manager instance
-manager = ConnectionManager()
