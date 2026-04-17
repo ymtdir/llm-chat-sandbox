@@ -7,12 +7,12 @@ AI Diary Companion - 会話から自動生成される日記サービス。
 
 ## 技術スタック
 
-- バックエンド: Python 3.12 / FastAPI / SQLAlchemy (async)
-- フロントエンド: TypeScript 5.x / React 19.x / Vite 6.x
+- バックエンド: Python / FastAPI / SQLAlchemy (async)
+- フロントエンド: TypeScript / React
 - DB: PostgreSQL (async)
 - 認証: JWT
 
-詳細は `docs/basic-design.md` を参照。
+詳細なバージョン情報は `docs/basic-design.md` を参照。
 
 ## アーキテクチャ
 
