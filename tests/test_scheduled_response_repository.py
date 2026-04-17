@@ -95,19 +95,24 @@ async def test_get_pending_excludes_sent(db: AsyncSession, sample_conversation):
     """Test that sent responses are not returned."""
     past_time = datetime.now() - timedelta(minutes=5)
 
+    # Store IDs before operations to avoid MissingGreenlet
+    character_id = sample_conversation.character_id
+    conversation_id = sample_conversation.id
+
     # Create pending response
     response = await scheduled_response_repository.create(
         db=db,
-        character_id=sample_conversation.character_id,
-        conversation_id=sample_conversation.id,
+        character_id=character_id,
+        conversation_id=conversation_id,
         trigger_message_id=1,
         scheduled_at=past_time,
         response_config={},
     )
+    response_id = response.id
     await db.commit()
 
     # Mark as sent
-    await scheduled_response_repository.mark_as_sent(db, response.id, 999)
+    await scheduled_response_repository.mark_as_sent(db, response_id, 999)
     await db.commit()
 
     # Should not be returned
@@ -119,19 +124,24 @@ async def test_get_pending_excludes_failed(db: AsyncSession, sample_conversation
     """Test that failed responses are not returned."""
     past_time = datetime.now() - timedelta(minutes=5)
 
+    # Store IDs before operations to avoid MissingGreenlet
+    character_id = sample_conversation.character_id
+    conversation_id = sample_conversation.id
+
     # Create pending response
     response = await scheduled_response_repository.create(
         db=db,
-        character_id=sample_conversation.character_id,
-        conversation_id=sample_conversation.id,
+        character_id=character_id,
+        conversation_id=conversation_id,
         trigger_message_id=1,
         scheduled_at=past_time,
         response_config={},
     )
+    response_id = response.id
     await db.commit()
 
     # Mark as failed
-    await scheduled_response_repository.mark_as_failed(db, response.id, "Test error")
+    await scheduled_response_repository.mark_as_failed(db, response_id, "Test error")
     await db.commit()
 
     # Should not be returned
@@ -193,15 +203,23 @@ async def test_get_by_id_not_found(db: AsyncSession):
 
 async def test_mark_as_sent_success(db: AsyncSession, sample_scheduled_response):
     """Test marking a response as sent."""
+    # Store ID before operations to avoid MissingGreenlet
+    response_id = sample_scheduled_response.id
+
     result = await scheduled_response_repository.mark_as_sent(
-        db, sample_scheduled_response.id, sent_message_id=123
+        db, response_id, sent_message_id=123
     )
+
+    # Store attributes before commit to avoid MissingGreenlet
+    assert result is not None
+    status = result.status
+    sent_message_id = result.sent_message_id
+    sent_at = result.sent_at
     await db.commit()
 
-    assert result is not None
-    assert result.status == ResponseStatus.SENT
-    assert result.sent_message_id == 123
-    assert result.sent_at is not None
+    assert status == ResponseStatus.SENT
+    assert sent_message_id == 123
+    assert sent_at is not None
 
 
 async def test_mark_as_sent_not_found(db: AsyncSession):
@@ -212,24 +230,37 @@ async def test_mark_as_sent_not_found(db: AsyncSession):
 
 async def test_mark_as_failed_success(db: AsyncSession, sample_scheduled_response):
     """Test marking a response as failed."""
+    # Store ID before operations to avoid MissingGreenlet
+    response_id = sample_scheduled_response.id
+
     error_msg = "Test error message"
     result = await scheduled_response_repository.mark_as_failed(
-        db, sample_scheduled_response.id, error_message=error_msg
+        db, response_id, error_message=error_msg
     )
+
+    # Store attributes before commit to avoid MissingGreenlet
+    assert result is not None
+    status = result.status
+    config_error = result.response_config["error"]
     await db.commit()
 
-    assert result is not None
-    assert result.status == ResponseStatus.FAILED
-    assert result.response_config["error"] == error_msg
+    assert status == ResponseStatus.FAILED
+    assert config_error == error_msg
 
 
 async def test_mark_as_failed_without_error_message(db: AsyncSession, sample_scheduled_response):
     """Test marking a response as failed without error message."""
-    result = await scheduled_response_repository.mark_as_failed(db, sample_scheduled_response.id)
+    # Store ID before operations to avoid MissingGreenlet
+    response_id = sample_scheduled_response.id
+
+    result = await scheduled_response_repository.mark_as_failed(db, response_id)
+
+    # Store attributes before commit to avoid MissingGreenlet
+    assert result is not None
+    status = result.status
     await db.commit()
 
-    assert result is not None
-    assert result.status == ResponseStatus.FAILED
+    assert status == ResponseStatus.FAILED
 
 
 async def test_mark_as_failed_not_found(db: AsyncSession):

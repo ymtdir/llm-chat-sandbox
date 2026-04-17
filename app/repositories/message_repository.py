@@ -52,3 +52,29 @@ async def get_unanswered_user_messages(
         .order_by(Message.sent_at.asc())
     )
     return list(result.scalars().all())
+
+
+async def get_messages_by_conversation_ids(
+    db: AsyncSession, conversation_ids: list[int], limit: int = 1000
+) -> list[Message]:
+    """Get messages for multiple conversations in a single query.
+
+    Args:
+        db: Database session
+        conversation_ids: List of conversation IDs to fetch messages for
+        limit: Maximum number of messages to return
+
+    Returns:
+        List of messages from all specified conversations
+
+    """
+    if not conversation_ids:
+        return []
+
+    result = await db.execute(
+        select(Message)
+        .where(Message.conversation_id.in_(conversation_ids))
+        .order_by(Message.sent_at.asc())
+        .limit(limit)
+    )
+    return list(result.scalars().all())

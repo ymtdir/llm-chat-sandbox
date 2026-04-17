@@ -109,9 +109,10 @@ async def mark_as_failed(
     scheduled_response.status = ResponseStatus.FAILED
     if error_message:
         # Store error message in response_config for debugging
-        if scheduled_response.response_config is None:
-            scheduled_response.response_config = {}
-        scheduled_response.response_config["error"] = error_message
+        # Create new dict to ensure SQLAlchemy detects the change
+        config = dict(scheduled_response.response_config) if scheduled_response.response_config else {}
+        config["error"] = error_message
+        scheduled_response.response_config = config
 
     await db.flush()
     await db.refresh(scheduled_response)
