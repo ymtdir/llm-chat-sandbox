@@ -12,7 +12,7 @@ from fastapi import FastAPI
 load_dotenv()
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
-from app.api.routes import auth, characters, conversations, ws  # noqa: E402
+from app.api.routes import auth, characters, conversations, diaries, ws  # noqa: E402
 from app.scheduler.jobs import process_pending_responses  # noqa: E402
 
 logger = logging.getLogger(__name__)
@@ -85,4 +85,5 @@ async def health_check() -> dict[str, str]:
 app.include_router(auth.router)
 app.include_router(characters.router)
 app.include_router(conversations.router)
+app.include_router(diaries.router)
 app.include_router(ws.router)
