@@ -2,6 +2,7 @@
 
 import logging
 import os
+import threading
 from typing import Any
 
 import firebase_admin
@@ -13,27 +14,51 @@ from app.models.user import UserFcmToken
 
 logger = logging.getLogger(__name__)
 
-# Initialize Firebase Admin SDK
-_firebase_app = None
+
+class FirebaseManager:
+    """Thread-safe singleton manager for Firebase Admin SDK."""
+
+    _instance: "FirebaseManager | None" = None
+    _lock = threading.Lock()
+    _app: Any = None
+
+    def __new__(cls) -> "FirebaseManager":
+        """Create or return existing singleton instance."""
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def initialize(self) -> None:
+        """Initialize Firebase Admin SDK with credentials."""
+        if self._app is None:
+            try:
+                credentials_path = os.getenv("FIREBASE_CREDENTIALS_PATH")
+                if not credentials_path:
+                    raise ValueError(
+                        "FIREBASE_CREDENTIALS_PATH environment variable is required. "
+                        "Set it to the path of your Firebase Admin SDK credentials JSON file."
+                    )
+                cred = credentials.Certificate(credentials_path)
+                self._app = firebase_admin.initialize_app(cred)
+                logger.info("Firebase Admin SDK initialized successfully")
+            except Exception as e:
+                logger.error(f"Failed to initialize Firebase Admin SDK: {e}", exc_info=True)
+                raise
+
+    @property
+    def app(self) -> Any:
+        """Get Firebase app instance."""
+        if self._app is None:
+            self.initialize()
+        return self._app
 
 
 def initialize_firebase() -> None:
-    """Initialize Firebase Admin SDK with credentials."""
-    global _firebase_app
-    if _firebase_app is None:
-        try:
-            credentials_path = os.getenv("FIREBASE_CREDENTIALS_PATH")
-            if not credentials_path:
-                raise ValueError(
-                    "FIREBASE_CREDENTIALS_PATH environment variable is required. "
-                    "Set it to the path of your Firebase Admin SDK credentials JSON file."
-                )
-            cred = credentials.Certificate(credentials_path)
-            _firebase_app = firebase_admin.initialize_app(cred)
-            logger.info("Firebase Admin SDK initialized successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize Firebase Admin SDK: {e}", exc_info=True)
-            raise
+    """Initialize Firebase Admin SDK with credentials (compatibility function)."""
+    manager = FirebaseManager()
+    manager.initialize()
 
 
 async def get_user_fcm_tokens(db: AsyncSession, user_id: int) -> list[str]:
@@ -73,8 +98,8 @@ async def send_push_notification(
 
     """
     # Ensure Firebase is initialized
-    if _firebase_app is None:
-        initialize_firebase()
+    manager = FirebaseManager()
+    manager.app  # This will initialize if not already done
 
     # Get all FCM tokens for the user
     fcm_tokens = await get_user_fcm_tokens(db, user_id)

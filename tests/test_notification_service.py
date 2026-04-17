@@ -14,6 +14,23 @@ from app.services.notification_service import (
 
 
 @pytest.fixture
+def clean_firebase_app():
+    """Clean up Firebase app state before and after each test."""
+    from app.services.notification_service import FirebaseManager
+
+    # Reset singleton instance
+    original_instance = FirebaseManager._instance
+    original_app = FirebaseManager._app if FirebaseManager._instance else None
+    FirebaseManager._instance = None
+    FirebaseManager._app = None
+    yield
+    # Restore original state
+    FirebaseManager._instance = original_instance
+    if original_instance:
+        FirebaseManager._app = original_app
+
+
+@pytest.fixture
 async def sample_fcm_tokens(db: AsyncSession, sample_user):
     """Create sample FCM tokens for testing."""
     token1 = UserFcmToken(
@@ -48,7 +65,9 @@ async def test_get_user_fcm_tokens_no_tokens(db: AsyncSession, sample_user):
 
 @patch("app.services.notification_service.firebase_admin")
 @patch("app.services.notification_service.credentials")
-def test_initialize_firebase(mock_credentials, mock_firebase_admin, monkeypatch):
+def test_initialize_firebase(
+    mock_credentials, mock_firebase_admin, monkeypatch, clean_firebase_app
+):
     """Test Firebase initialization."""
     # Set environment variable
     monkeypatch.setenv("FIREBASE_CREDENTIALS_PATH", "./test-credentials.json")
@@ -56,11 +75,6 @@ def test_initialize_firebase(mock_credentials, mock_firebase_admin, monkeypatch)
     # Mock credentials and firebase_admin
     mock_cred = MagicMock()
     mock_credentials.Certificate.return_value = mock_cred
-
-    # Reset global state
-    import app.services.notification_service as ns
-
-    ns._firebase_app = None
 
     # Call initialize
     initialize_firebase()
@@ -71,15 +85,10 @@ def test_initialize_firebase(mock_credentials, mock_firebase_admin, monkeypatch)
 
 
 @patch("app.services.notification_service.credentials")
-def test_initialize_firebase_missing_env(mock_credentials, monkeypatch):
+def test_initialize_firebase_missing_env(mock_credentials, monkeypatch, clean_firebase_app):
     """Test Firebase initialization fails without environment variable."""
     # Ensure env var is not set
     monkeypatch.delenv("FIREBASE_CREDENTIALS_PATH", raising=False)
-
-    # Reset global state
-    import app.services.notification_service as ns
-
-    ns._firebase_app = None
 
     # Should raise ValueError
     with pytest.raises(ValueError) as exc_info:
@@ -89,11 +98,16 @@ def test_initialize_firebase_missing_env(mock_credentials, monkeypatch):
 
 
 @patch("app.services.notification_service.messaging")
-@patch("app.services.notification_service.initialize_firebase")
+@patch("app.services.notification_service.FirebaseManager")
 async def test_send_push_notification_success(
-    mock_initialize, mock_messaging, db: AsyncSession, sample_user, sample_fcm_tokens
+    mock_manager_class, mock_messaging, db: AsyncSession, sample_user, sample_fcm_tokens
 ):
     """Test sending push notification successfully."""
+    # Mock FirebaseManager instance
+    mock_manager = MagicMock()
+    mock_manager.app = MagicMock()  # Mock app property
+    mock_manager_class.return_value = mock_manager
+
     # Mock Firebase messaging
     mock_messaging.send.return_value = "message_id_123"
 
@@ -112,11 +126,16 @@ async def test_send_push_notification_success(
 
 
 @patch("app.services.notification_service.messaging")
-@patch("app.services.notification_service.initialize_firebase")
+@patch("app.services.notification_service.FirebaseManager")
 async def test_send_push_notification_no_tokens(
-    mock_initialize, mock_messaging, db: AsyncSession, sample_user
+    mock_manager_class, mock_messaging, db: AsyncSession, sample_user
 ):
     """Test sending push notification when user has no tokens."""
+    # Mock FirebaseManager instance
+    mock_manager = MagicMock()
+    mock_manager.app = MagicMock()
+    mock_manager_class.return_value = mock_manager
+
     # Send notification
     sent_count = await send_push_notification(
         db=db,
@@ -131,11 +150,16 @@ async def test_send_push_notification_no_tokens(
 
 
 @patch("app.services.notification_service.messaging")
-@patch("app.services.notification_service.initialize_firebase")
+@patch("app.services.notification_service.FirebaseManager")
 async def test_send_push_notification_unregistered_token(
-    mock_initialize, mock_messaging, db: AsyncSession, sample_user, sample_fcm_tokens
+    mock_manager_class, mock_messaging, db: AsyncSession, sample_user, sample_fcm_tokens
 ):
     """Test handling unregistered FCM token."""
+    # Mock FirebaseManager instance
+    mock_manager = MagicMock()
+    mock_manager.app = MagicMock()
+    mock_manager_class.return_value = mock_manager
+
     # Create a proper exception class for UnregisteredError
     class UnregisteredError(Exception):
         pass
@@ -169,11 +193,16 @@ async def test_send_push_notification_unregistered_token(
 
 
 @patch("app.services.notification_service.messaging")
-@patch("app.services.notification_service.initialize_firebase")
+@patch("app.services.notification_service.FirebaseManager")
 async def test_send_push_notification_with_data(
-    mock_initialize, mock_messaging, db: AsyncSession, sample_user, sample_fcm_tokens
+    mock_manager_class, mock_messaging, db: AsyncSession, sample_user, sample_fcm_tokens
 ):
     """Test sending push notification with custom data payload."""
+    # Mock FirebaseManager instance
+    mock_manager = MagicMock()
+    mock_manager.app = MagicMock()
+    mock_manager_class.return_value = mock_manager
+
     mock_messaging.send.return_value = "message_id_123"
 
     # Send with data
@@ -201,3 +230,66 @@ async def test_send_push_notification_with_data(
         "message_id": "456",
         "type": "new_message",
     }
+
+
+@patch("app.services.notification_service.messaging")
+@patch("app.services.notification_service.FirebaseManager")
+async def test_send_push_notification_partial_failure(
+    mock_manager_class, mock_messaging, db: AsyncSession, sample_user, sample_fcm_tokens
+):
+    """Test handling partial failures when sending to multiple devices."""
+    # Mock FirebaseManager instance
+    mock_manager = MagicMock()
+    mock_manager.app = MagicMock()
+    mock_manager_class.return_value = mock_manager
+
+    # Mock UnregisteredError as a proper exception class
+    class UnregisteredError(Exception):
+        pass
+
+    mock_messaging.UnregisteredError = UnregisteredError
+
+    # First token succeeds, second fails with generic exception
+    mock_messaging.send.side_effect = [
+        "success_1",
+        Exception("Network error"),
+    ]
+
+    # Send notification
+    sent_count = await send_push_notification(
+        db=db,
+        user_id=sample_user.id,
+        title="Test Title",
+        body="Test Body",
+    )
+
+    # Only 1 successful send
+    assert sent_count == 1
+    # Both were attempted
+    assert mock_messaging.send.call_count == 2
+
+
+@patch("app.services.notification_service.messaging")
+@patch("app.services.notification_service.FirebaseManager")
+async def test_send_push_notification_empty_body(
+    mock_manager_class, mock_messaging, db: AsyncSession, sample_user, sample_fcm_tokens
+):
+    """Test sending notification with empty body."""
+    # Mock FirebaseManager instance
+    mock_manager = MagicMock()
+    mock_manager.app = MagicMock()
+    mock_manager_class.return_value = mock_manager
+
+    mock_messaging.send.return_value = "message_id_123"
+
+    # Send with empty body
+    sent_count = await send_push_notification(
+        db=db,
+        user_id=sample_user.id,
+        title="Test Title",
+        body="",
+    )
+
+    # Should still succeed
+    assert sent_count == 2
+    assert mock_messaging.send.call_count == 2
