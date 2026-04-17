@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import type { Message } from '../types/diary';
 import './Chat.css';
@@ -8,6 +9,7 @@ export default function Chat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -58,9 +60,17 @@ export default function Chat() {
       <header className="chat-header">
         <div className="container">
           <h2>AI Diary Companion</h2>
-          <button onClick={handleLogout} className="button-dark">
-            Sign Out
-          </button>
+          <div className="header-actions">
+            <button
+              onClick={() => navigate('/diaries')}
+              className="button-primary"
+            >
+              My Diaries
+            </button>
+            <button onClick={handleLogout} className="button-dark">
+              Sign Out
+            </button>
+          </div>
         </div>
       </header>
 
