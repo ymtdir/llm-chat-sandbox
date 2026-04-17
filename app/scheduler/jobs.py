@@ -1,7 +1,7 @@
-"""Scheduler jobs for processing AI responses."""
+"""Scheduler jobs for processing AI responses and diary generation."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -14,6 +14,7 @@ from app.repositories import (
     message_repository,
     scheduled_response_repository,
 )
+from app.services import diary_service
 from app.services.llm_service import LLMService
 from app.services.notification_service import send_push_notification
 
@@ -250,3 +251,74 @@ async def _process_conversation_responses(
             except Exception as mark_error:
                 logger.error(f"Failed to mark response as failed: {mark_error}")
         await db.commit()
+
+
+async def generate_daily_diaries() -> None:
+    """Generate daily diaries for all users with messages from yesterday.
+
+    This job runs daily at midnight and:
+    1. Identifies users who had messages yesterday
+    2. For each user, generates a diary if they have >= 5 messages
+    3. Saves the diary to the database
+    4. Skips if diary already exists (unique constraint)
+    """
+    async with AsyncSessionLocal() as db:
+        try:
+            # Get yesterday's date
+            yesterday = (datetime.now() - timedelta(days=1)).date()
+
+            logger.info(f"Starting daily diary generation for {yesterday}")
+
+            # Get users who had messages yesterday
+            user_ids = await diary_service.get_users_with_messages_on_date(db, yesterday)
+
+            if not user_ids:
+                logger.info(f"No users with messages on {yesterday}")
+                return
+
+            logger.info(f"Found {len(user_ids)} users with messages on {yesterday}")
+
+            # Generate diary for each user
+            success_count = 0
+            skip_count = 0
+            error_count = 0
+
+            for user_id in user_ids:
+                try:
+                    diary = await diary_service.generate_daily_diary(db, user_id, yesterday)
+
+                    if diary:
+                        await db.commit()
+                        success_count += 1
+                        logger.info(
+                            f"Generated diary for user {user_id} on {yesterday} "
+                            f"(ID: {diary.id})"
+                        )
+                    else:
+                        skip_count += 1
+                        logger.debug(
+                            f"Skipped diary for user {user_id} on {yesterday} "
+                            f"(insufficient messages)"
+                        )
+
+                except ValueError as e:
+                    # Diary already exists
+                    skip_count += 1
+                    logger.debug(f"Skipped user {user_id}: {e}")
+
+                except Exception as e:
+                    error_count += 1
+                    logger.error(
+                        f"Failed to generate diary for user {user_id} on {yesterday}: {e}",
+                        exc_info=True,
+                    )
+                    await db.rollback()
+
+            logger.info(
+                f"Daily diary generation completed for {yesterday}: "
+                f"{success_count} generated, {skip_count} skipped, {error_count} errors"
+            )
+
+        except Exception as e:
+            logger.error(f"Error in generate_daily_diaries: {e}", exc_info=True)
+            await db.rollback()
