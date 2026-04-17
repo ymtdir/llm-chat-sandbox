@@ -108,13 +108,16 @@ async def _process_conversation_responses(
         responses: List of pending scheduled responses for this conversation
     """
     try:
+        # Store response IDs early to avoid MissingGreenlet errors
+        response_ids = [r.id for r in responses]
+
         # Get conversation and character
         conversation = await conversation_repository.get_by_id(db, conversation_id)
         if not conversation:
             error_msg = f"Conversation {conversation_id} not found"
             logger.error(error_msg)
-            for response in responses:
-                await scheduled_response_repository.mark_as_failed(db, response.id, error_msg)
+            for response_id in response_ids:
+                await scheduled_response_repository.mark_as_failed(db, response_id, error_msg)
             await db.commit()
             return
 
@@ -122,8 +125,8 @@ async def _process_conversation_responses(
         if not character:
             error_msg = f"Character {conversation.character_id} not found"
             logger.error(error_msg)
-            for response in responses:
-                await scheduled_response_repository.mark_as_failed(db, response.id, error_msg)
+            for response_id in response_ids:
+                await scheduled_response_repository.mark_as_failed(db, response_id, error_msg)
             await db.commit()
             return
 
