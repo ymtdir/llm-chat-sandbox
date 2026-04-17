@@ -136,16 +136,25 @@ async def test_send_push_notification_unregistered_token(
     mock_initialize, mock_messaging, db: AsyncSession, sample_user, sample_fcm_tokens
 ):
     """Test handling unregistered FCM token."""
+    # Create a proper exception class for UnregisteredError
+    class UnregisteredError(Exception):
+        pass
+
+    mock_messaging.UnregisteredError = UnregisteredError
+
     # Mock one token as unregistered
     mock_messaging.send.side_effect = [
         "message_id_123",  # First token succeeds
-        mock_messaging.UnregisteredError("Token unregistered"),  # Second fails
+        UnregisteredError("Token unregistered"),  # Second fails
     ]
+
+    # Get user_id before sending
+    user_id = sample_user.id
 
     # Send notification
     sent_count = await send_push_notification(
         db=db,
-        user_id=sample_user.id,
+        user_id=user_id,
         title="Test Title",
         body="Test Body",
     )
@@ -153,9 +162,8 @@ async def test_send_push_notification_unregistered_token(
     # Only 1 successful send
     assert sent_count == 1
 
-    # Verify unregistered token was deleted
-    await db.commit()
-    remaining_tokens = await get_user_fcm_tokens(db, sample_user.id)
+    # Verify unregistered token was deleted from database
+    remaining_tokens = await get_user_fcm_tokens(db, user_id)
     assert len(remaining_tokens) == 1
     assert "test_token_1" in remaining_tokens
 
