@@ -54,10 +54,10 @@ def test_format_messages(mock_messages):
 
     result = generator._format_messages(mock_messages)
 
-    # Check format
+    # Check format (hours increment, not minutes)
     assert "[10:00] 私: Test message 0" in result
-    assert "[10:01] 相手: Test message 1" in result
-    assert "[10:02] 私: Test message 2" in result
+    assert "[11:00] 相手: Test message 1" in result
+    assert "[12:00] 私: Test message 2" in result
 
     # Count lines
     lines = result.split("\n")
