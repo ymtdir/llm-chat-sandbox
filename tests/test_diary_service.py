@@ -72,6 +72,59 @@ async def test_generate_daily_diary_insufficient_messages(
 
 
 @pytest.mark.skip(reason="Pre-existing SQLAlchemy async session issue (MissingGreenlet)")
+async def test_generate_daily_diary_boundary_4_messages(
+    db: AsyncSession, sample_conversation, sample_user
+):
+    """Test that diary is not generated with exactly 4 messages (below threshold)."""
+    target_date = date.today()
+
+    # Create exactly 4 messages (below MIN_MESSAGES_FOR_DIARY)
+    for i in range(4):
+        await message_repository.create(
+            db=db,
+            conversation_id=sample_conversation.id,
+            content=f"Test message {i}",
+            sender_type=SenderType.USER,
+            sender_id=sample_user.id,
+        )
+    await db.commit()
+
+    diary = await diary_service.generate_daily_diary(db, sample_user.id, target_date)
+
+    assert diary is None
+
+
+@pytest.mark.skip(reason="Pre-existing SQLAlchemy async session issue (MissingGreenlet)")
+async def test_generate_daily_diary_boundary_6_messages(
+    db: AsyncSession, sample_conversation, sample_user
+):
+    """Test that diary is generated with exactly 6 messages (above threshold)."""
+    target_date = date.today()
+
+    # Create exactly 6 messages (above MIN_MESSAGES_FOR_DIARY)
+    for i in range(6):
+        await message_repository.create(
+            db=db,
+            conversation_id=sample_conversation.id,
+            content=f"Test message {i}",
+            sender_type=SenderType.USER if i % 2 == 0 else SenderType.CHARACTER,
+            sender_id=sample_user.id if i % 2 == 0 else sample_conversation.character_id,
+        )
+    await db.commit()
+
+    # Mock DiaryGenerator
+    with patch("app.services.diary_service.DiaryGenerator") as mock_generator_class:
+        mock_generator = MagicMock()
+        mock_generator.generate_from_conversation.return_value = "6件のメッセージから生成"
+        mock_generator_class.return_value = mock_generator
+
+        diary = await diary_service.generate_daily_diary(db, sample_user.id, target_date)
+
+    assert diary is not None
+    assert diary.diary_metadata["message_count"] == 6
+
+
+@pytest.mark.skip(reason="Pre-existing SQLAlchemy async session issue (MissingGreenlet)")
 async def test_generate_daily_diary_duplicate_error(
     db: AsyncSession, sample_conversation, sample_user
 ):

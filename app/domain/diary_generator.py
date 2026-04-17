@@ -8,9 +8,14 @@ from app.services.llm_service import LLMService
 class DiaryGenerator:
     """Generate diary entries from conversation history."""
 
-    def __init__(self) -> None:
-        """Initialize diary generator with LLM service."""
-        self.llm_service = LLMService()
+    def __init__(self, llm_service: LLMService) -> None:
+        """Initialize diary generator with LLM service.
+
+        Args:
+            llm_service: LLM service for generating diary text
+
+        """
+        self.llm_service = llm_service
 
     def generate_from_conversation(self, messages: list[Message]) -> str:
         """Generate diary entry from conversation messages.

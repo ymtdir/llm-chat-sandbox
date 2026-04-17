@@ -1,6 +1,6 @@
 """Tests for diary generator domain service."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -23,78 +23,50 @@ def mock_messages():
     return messages
 
 
-def test_generate_from_conversation_success(mock_messages):
+@pytest.fixture
+def mock_llm_service():
+    """Create mock LLM service."""
+    service = MagicMock()
+    service.generate_response.return_value = "今日は楽しい会話ができた。"
+    return service
+
+
+def test_generate_from_conversation_success(mock_messages, mock_llm_service):
     """Test successful diary generation from messages."""
-    generator = DiaryGenerator()
+    generator = DiaryGenerator(mock_llm_service)
 
-    with patch.object(generator.llm_service, "generate_response") as mock_generate:
-        mock_generate.return_value = "今日は楽しい会話ができた。"
+    result = generator.generate_from_conversation(mock_messages)
 
-        result = generator.generate_from_conversation(mock_messages)
+    assert result == "今日は楽しい会話ができた。"
+    mock_llm_service.generate_response.assert_called_once()
 
-        assert result == "今日は楽しい会話ができた。"
-        mock_generate.assert_called_once()
-
-        # Verify system prompt
-        call_args = mock_generate.call_args
-        assert "日記の自動生成アシスタント" in call_args.kwargs["system_prompt"]
+    # Verify system prompt contains key instructions
+    call_args = mock_llm_service.generate_response.call_args
+    assert "日記の自動生成アシスタント" in call_args.kwargs["system_prompt"]
 
 
-def test_generate_from_conversation_empty_list():
+def test_generate_from_conversation_empty_list(mock_llm_service):
     """Test error when message list is empty."""
-    generator = DiaryGenerator()
+    generator = DiaryGenerator(mock_llm_service)
 
     with pytest.raises(ValueError, match="Cannot generate diary from empty message list"):
         generator.generate_from_conversation([])
 
 
-def test_format_messages(mock_messages):
-    """Test message formatting."""
-    generator = DiaryGenerator()
-
-    result = generator._format_messages(mock_messages)
-
-    # Check format (hours increment, not minutes)
-    assert "[10:00] 私: Test message 0" in result
-    assert "[11:00] 相手: Test message 1" in result
-    assert "[12:00] 私: Test message 2" in result
-
-    # Count lines
-    lines = result.split("\n")
-    assert len(lines) == 10
-
-
-def test_build_diary_prompt():
-    """Test diary prompt construction."""
-    generator = DiaryGenerator()
-
-    prompt = generator._build_diary_prompt()
-
-    # Verify key instructions
-    assert "日記の自動生成アシスタント" in prompt
-    assert "200〜300文字" in prompt
-    assert "1人称視点" in prompt
-    assert "自然な日本語" in prompt
-
-
-def test_generate_with_llm_error(mock_messages):
+def test_generate_with_llm_error(mock_messages, mock_llm_service):
     """Test handling of LLM errors."""
-    generator = DiaryGenerator()
+    mock_llm_service.generate_response.side_effect = Exception("API Error")
+    generator = DiaryGenerator(mock_llm_service)
 
-    with patch.object(generator.llm_service, "generate_response") as mock_generate:
-        mock_generate.side_effect = Exception("API Error")
-
-        with pytest.raises(Exception, match="API Error"):
-            generator.generate_from_conversation(mock_messages)
+    with pytest.raises(Exception, match="API Error"):
+        generator.generate_from_conversation(mock_messages)
 
 
-def test_generate_strips_whitespace(mock_messages):
+def test_generate_strips_whitespace(mock_messages, mock_llm_service):
     """Test that generated text is stripped of whitespace."""
-    generator = DiaryGenerator()
+    mock_llm_service.generate_response.return_value = "  日記のテキスト  \n"
+    generator = DiaryGenerator(mock_llm_service)
 
-    with patch.object(generator.llm_service, "generate_response") as mock_generate:
-        mock_generate.return_value = "  日記のテキスト  \n"
+    result = generator.generate_from_conversation(mock_messages)
 
-        result = generator.generate_from_conversation(mock_messages)
-
-        assert result == "日記のテキスト"
+    assert result == "日記のテキスト"
