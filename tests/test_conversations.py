@@ -23,7 +23,7 @@ def get_auth_token_and_user(client) -> tuple[str, dict]:
     user_data = register_response.json()
 
     login_response = client.post(
-        "/api/auth/login",
+        "/api/auth/token",
         json={
             "email": "testuser@example.com",
             "password": "password123",
@@ -244,7 +244,7 @@ def test_send_message_forbidden(client):
         },
     )
     login_response = client.post(
-        "/api/auth/login",
+        "/api/auth/token",
         json={
             "email": "user2@example.com",
             "password": "password123",
@@ -370,7 +370,7 @@ def test_get_messages_forbidden(client):
         },
     )
     login_response = client.post(
-        "/api/auth/login",
+        "/api/auth/token",
         json={
             "email": "user2@example.com",
             "password": "password123",

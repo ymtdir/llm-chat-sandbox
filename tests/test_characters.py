@@ -33,7 +33,7 @@ def get_auth_token(client) -> str:
     )
 
     response = client.post(
-        "/api/auth/login",
+        "/api/auth/token",
         json={
             "email": "testuser@example.com",
             "password": "password123",

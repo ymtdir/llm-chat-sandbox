@@ -86,7 +86,7 @@ def test_register_short_password(client):
 
 
 def test_login_success(client):
-    """Test successful login."""
+    """Test successful login with JSON format."""
     # First register a user
     client.post(
         "/api/auth/register",
@@ -96,9 +96,9 @@ def test_login_success(client):
         },
     )
 
-    # Then login
+    # Then login using /token endpoint (accepts JSON)
     response = client.post(
-        "/api/auth/login",
+        "/api/auth/token",
         json={
             "email": "login@example.com",
             "password": "password123",
@@ -122,9 +122,9 @@ def test_login_wrong_password(client):
         },
     )
 
-    # Try to login with wrong password
+    # Try to login with wrong password using /token endpoint
     response = client.post(
-        "/api/auth/login",
+        "/api/auth/token",
         json={
             "email": "wrongpass@example.com",
             "password": "wrong_password",
@@ -138,7 +138,7 @@ def test_login_wrong_password(client):
 def test_login_nonexistent_user(client):
     """Test login with non-existent user."""
     response = client.post(
-        "/api/auth/login",
+        "/api/auth/token",
         json={
             "email": "nonexistent@example.com",
             "password": "password123",
@@ -172,7 +172,7 @@ def test_fcm_token_update_authorized(client):
     )
 
     login_response = client.post(
-        "/api/auth/login",
+        "/api/auth/token",
         json={
             "email": "fcm@example.com",
             "password": "password123",
