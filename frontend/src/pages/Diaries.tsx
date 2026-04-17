@@ -10,10 +10,6 @@ export default function Diaries() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadDiaries();
-  }, []);
-
   const loadDiaries = async () => {
     try {
       setLoading(true);
@@ -26,6 +22,12 @@ export default function Diaries() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Load diaries on component mount - this is the correct pattern for initial data fetching
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadDiaries();
+  }, []);
 
   const handleLogout = () => {
     apiClient.logout();

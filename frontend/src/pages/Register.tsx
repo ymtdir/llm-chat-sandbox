@@ -30,7 +30,7 @@ export default function Register() {
     try {
       await apiClient.register({ username, password });
       navigate('/chat');
-    } catch (err) {
+    } catch {
       setError('Username already exists or registration failed');
     } finally {
       setLoading(false);

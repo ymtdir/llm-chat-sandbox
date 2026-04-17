@@ -18,7 +18,7 @@ export default function Login() {
     try {
       await apiClient.login({ username, password });
       navigate('/chat');
-    } catch (err) {
+    } catch {
       setError('Invalid username or password');
     } finally {
       setLoading(false);
