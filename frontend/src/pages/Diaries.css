@@ -1,0 +1,139 @@
+.diaries-page {
+  min-height: 100vh;
+  background-color: var(--color-light-gray);
+}
+
+.diaries-header {
+  background-color: var(--color-near-black);
+  padding: 32px 0;
+}
+
+.diaries-header .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.diaries-header h1 {
+  color: var(--color-white);
+  font-size: 40px;
+  line-height: 1.1;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.diaries-main {
+  padding: 40px 0;
+}
+
+.diaries-loading,
+.diaries-error,
+.diaries-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.diaries-empty h3 {
+  margin-bottom: 12px;
+  color: var(--color-text-primary-light);
+}
+
+.diaries-empty p {
+  color: var(--color-text-secondary-light);
+  margin-bottom: 24px;
+}
+
+.diaries-error {
+  color: #d70015;
+}
+
+.diaries-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.diary-card {
+  background-color: var(--color-white);
+  border-radius: var(--radius-large);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease;
+}
+
+.diary-card:hover {
+  transform: translateY(-2px);
+}
+
+.diary-date {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-apple-blue);
+  margin-bottom: 12px;
+  letter-spacing: -0.224px;
+}
+
+.diary-content {
+  font-size: 17px;
+  line-height: 1.47;
+  color: var(--color-text-primary-light);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-height: 300px;
+  overflow: hidden;
+  position: relative;
+}
+
+.diary-content::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, var(--color-white));
+}
+
+@media (max-width: 1024px) {
+  .diaries-header h1 {
+    font-size: 32px;
+  }
+
+  .diaries-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .diaries-header {
+    padding: 24px 0;
+  }
+
+  .diaries-header h1 {
+    font-size: 28px;
+    width: 100%;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .header-actions button {
+    flex: 1;
+  }
+
+  .diaries-grid {
+    grid-template-columns: 1fr;
+  }
+}
