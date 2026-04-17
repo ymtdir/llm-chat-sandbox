@@ -15,6 +15,7 @@ from app.repositories import (
     scheduled_response_repository,
 )
 from app.services.llm_service import LLMService
+from app.services.notification_service import send_push_notification
 
 logger = logging.getLogger(__name__)
 
@@ -152,28 +153,72 @@ async def _process_conversation_responses(
             f"created message {ai_message.id}"
         )
 
-        # Send WebSocket notification to the user
+        # Send notification to the user
+        # If WebSocket is connected, use WebSocket; otherwise, use FCM push notification
         try:
             connection_manager = get_connection_manager()
-            await connection_manager.send_message(
-                user_id=conversation.user_id,
-                message={
-                    "type": "new_message",
-                    "conversation_id": conversation_id,
-                    "message": {
-                        "id": ai_message.id,
-                        "content": ai_message.content,
-                        "sender_type": ai_message.sender_type.value,
-                        "sender_id": ai_message.sender_id,
-                        "sent_at": ai_message.sent_at.isoformat(),
+            user_id = conversation.user_id
+
+            # Check if user is connected via WebSocket
+            if user_id in connection_manager.active_connections:
+                # Send via WebSocket
+                await connection_manager.send_message(
+                    user_id=user_id,
+                    message={
+                        "type": "new_message",
+                        "conversation_id": conversation_id,
+                        "message": {
+                            "id": ai_message.id,
+                            "content": ai_message.content,
+                            "sender_type": ai_message.sender_type.value,
+                            "sender_id": ai_message.sender_id,
+                            "sent_at": ai_message.sent_at.isoformat(),
+                        },
                     },
-                },
-            )
-            logger.debug(f"Sent WebSocket notification to user {conversation.user_id}")
+                )
+                logger.debug(f"Sent WebSocket notification to user {user_id}")
+            else:
+                # User not connected - send push notification via FCM
+                try:
+                    # Truncate message content to 50 characters for notification body
+                    notification_body = (
+                        ai_message.content[:50] + "..."
+                        if len(ai_message.content) > 50
+                        else ai_message.content
+                    )
+
+                    # Send push notification
+                    sent_count = await send_push_notification(
+                        db=db,
+                        user_id=user_id,
+                        title=character.name,
+                        body=notification_body,
+                        data={
+                            "type": "new_message",
+                            "conversation_id": conversation_id,
+                            "message_id": ai_message.id,
+                        },
+                    )
+
+                    if sent_count > 0:
+                        logger.info(
+                            f"Sent FCM push notification to {sent_count} device(s) "
+                            f"for user {user_id}"
+                        )
+                    else:
+                        logger.warning(f"No FCM tokens available for user {user_id}")
+
+                except Exception as fcm_error:
+                    # Don't fail the job if push notification fails
+                    logger.error(
+                        f"Failed to send FCM push notification to user {user_id}: {fcm_error}",
+                        exc_info=True,
+                    )
+
         except Exception as e:
             # Don't fail the job if notification fails
             logger.warning(
-                f"Failed to send WebSocket notification to user {conversation.user_id}: {e}"
+                f"Failed to send notification to user {conversation.user_id}: {e}"
             )
 
     except Exception as e:
