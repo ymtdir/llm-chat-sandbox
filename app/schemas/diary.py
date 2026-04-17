@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DiaryResponse(BaseModel):
@@ -13,7 +13,7 @@ class DiaryResponse(BaseModel):
     id: int
     diary_date: date
     content: str
-    metadata: dict | None
+    diary_metadata: dict | None = Field(serialization_alias="metadata")
     created_at: datetime
 
 
