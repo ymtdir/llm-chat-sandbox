@@ -1,8 +1,8 @@
 """Service for diary generation and management."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.diary_generator import DiaryGenerator

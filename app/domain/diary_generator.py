@@ -1,6 +1,5 @@
 """Domain service for generating diary entries from conversation history."""
 
-from datetime import datetime
 
 from app.models.message import Message, SenderType
 from app.services.llm_service import LLMService
