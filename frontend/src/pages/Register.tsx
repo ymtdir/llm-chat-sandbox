@@ -16,12 +16,12 @@ export default function Register() {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('パスワードが一致しません');
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError('パスワードは6文字以上で入力してください');
       return;
     }
 
@@ -31,7 +31,7 @@ export default function Register() {
       await apiClient.register({ username, password });
       navigate('/chat');
     } catch {
-      setError('Username already exists or registration failed');
+      setError('ユーザー名が既に存在するか、登録に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -40,46 +40,46 @@ export default function Register() {
   return (
     <div className="auth-page">
       <div className="auth-container">
-        <h1>Create Account</h1>
-        <p className="auth-subtitle">Start your personal diary journey</p>
+        <h1>アカウント作成</h1>
+        <p className="auth-subtitle">あなただけの日記を始めましょう</p>
 
         <form onSubmit={handleSubmit} className="auth-form">
           {error && <div className="auth-error">{error}</div>}
 
           <div className="form-group">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="username">ユーザー名</label>
             <input
               id="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Choose a username"
+              placeholder="ユーザー名を入力"
               required
               autoComplete="username"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">パスワード</label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Create a password"
+              placeholder="パスワードを入力"
               required
               autoComplete="new-password"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="confirm-password">Confirm Password</label>
+            <label htmlFor="confirm-password">パスワード確認</label>
             <input
               id="confirm-password"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Re-enter your password"
+              placeholder="パスワードを再入力"
               required
               autoComplete="new-password"
             />
@@ -90,12 +90,12 @@ export default function Register() {
             className="button-primary auth-button"
             disabled={loading}
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? 'アカウント作成中...' : 'アカウント作成'}
           </button>
         </form>
 
         <p className="auth-footer">
-          Already have an account? <Link to="/login">Sign in</Link>
+          すでにアカウントをお持ちですか？ <Link to="/login">ログイン</Link>
         </p>
       </div>
     </div>

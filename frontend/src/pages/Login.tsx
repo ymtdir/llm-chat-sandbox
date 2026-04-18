@@ -19,7 +19,7 @@ export default function Login() {
       await apiClient.login({ username, password });
       navigate('/chat');
     } catch {
-      setError('Invalid username or password');
+      setError('ユーザー名またはパスワードが正しくありません');
     } finally {
       setLoading(false);
     }
@@ -28,33 +28,33 @@ export default function Login() {
   return (
     <div className="auth-page">
       <div className="auth-container">
-        <h1>Welcome Back</h1>
-        <p className="auth-subtitle">Sign in to continue your diary journey</p>
+        <h1>おかえりなさい</h1>
+        <p className="auth-subtitle">ログインして日記の旅を続けましょう</p>
 
         <form onSubmit={handleSubmit} className="auth-form">
           {error && <div className="auth-error">{error}</div>}
 
           <div className="form-group">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="username">ユーザー名</label>
             <input
               id="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
+              placeholder="ユーザー名を入力"
               required
               autoComplete="username"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">パスワード</label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
+              placeholder="パスワードを入力"
               required
               autoComplete="current-password"
             />
@@ -65,12 +65,12 @@ export default function Login() {
             className="button-primary auth-button"
             disabled={loading}
           >
-            {loading ? 'Signing In...' : 'Sign In'}
+            {loading ? 'ログイン中...' : 'ログイン'}
           </button>
         </form>
 
         <p className="auth-footer">
-          Don't have an account? <Link to="/register">Create one</Link>
+          アカウントをお持ちでないですか？ <Link to="/register">新規登録</Link>
         </p>
       </div>
     </div>

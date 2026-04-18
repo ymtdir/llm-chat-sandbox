@@ -16,7 +16,7 @@ export default function Diaries() {
       const response = await apiClient.getDiaries(50, 0);
       setDiaries(response.diaries);
     } catch (err) {
-      setError('Failed to load diaries');
+      setError('日記の読み込みに失敗しました');
       console.error(err);
     } finally {
       setLoading(false);
@@ -35,7 +35,7 @@ export default function Diaries() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -46,16 +46,16 @@ export default function Diaries() {
     <div className="diaries-page">
       <header className="diaries-header">
         <div className="container">
-          <h1>My Diaries</h1>
+          <h1>マイ日記</h1>
           <div className="header-actions">
             <button
               onClick={() => navigate('/chat')}
               className="button-primary"
             >
-              New Entry
+              新規作成
             </button>
             <button onClick={handleLogout} className="button-dark">
-              Sign Out
+              ログアウト
             </button>
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function Diaries() {
         <div className="container">
           {loading && (
             <div className="diaries-loading">
-              <p>Loading your diaries...</p>
+              <p>日記を読み込んでいます...</p>
             </div>
           )}
 
@@ -77,13 +77,13 @@ export default function Diaries() {
 
           {!loading && !error && diaries.length === 0 && (
             <div className="diaries-empty">
-              <h3>No diaries yet</h3>
-              <p>Start a conversation to create your first diary entry</p>
+              <h3>まだ日記がありません</h3>
+              <p>会話を始めて最初の日記を作成しましょう</p>
               <button
                 onClick={() => navigate('/chat')}
                 className="button-primary"
               >
-                Start Writing
+                書き始める
               </button>
             </div>
           )}

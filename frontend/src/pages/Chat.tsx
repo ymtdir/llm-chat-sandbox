@@ -43,7 +43,8 @@ export default function Chat() {
       console.error('Chat error:', err);
       const errorMessage: Message = {
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content:
+          '申し訳ございません。エラーが発生しました。もう一度お試しください。',
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -59,16 +60,16 @@ export default function Chat() {
     <div className="chat-page">
       <header className="chat-header">
         <div className="container">
-          <h2>AI Diary Companion</h2>
+          <h2>AI日記コンパニオン</h2>
           <div className="header-actions">
             <button
               onClick={() => navigate('/diaries')}
               className="button-primary"
             >
-              My Diaries
+              日記一覧
             </button>
             <button onClick={handleLogout} className="button-dark">
-              Sign Out
+              ログアウト
             </button>
           </div>
         </div>
@@ -79,9 +80,9 @@ export default function Chat() {
           <div className="chat-messages">
             {messages.length === 0 && (
               <div className="chat-empty">
-                <h3>Start a conversation</h3>
+                <h3>会話を始めましょう</h3>
                 <p>
-                  Share your thoughts, and I'll help create your diary entry.
+                  あなたの思いを共有してください。日記の作成をお手伝いします。
                 </p>
               </div>
             )}
@@ -98,7 +99,7 @@ export default function Chat() {
             {loading && (
               <div className="chat-message chat-message-assistant">
                 <div className="chat-message-content chat-loading">
-                  Thinking...
+                  考え中...
                 </div>
               </div>
             )}
@@ -115,7 +116,7 @@ export default function Chat() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Tell me about your day..."
+              placeholder="今日のことを聞かせてください..."
               className="chat-input"
               disabled={loading}
             />
@@ -124,7 +125,7 @@ export default function Chat() {
               className="button-primary"
               disabled={loading || !input.trim()}
             >
-              Send
+              送信
             </button>
           </form>
         </div>
