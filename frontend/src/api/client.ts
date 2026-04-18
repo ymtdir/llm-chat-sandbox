@@ -62,11 +62,11 @@ class ApiClient {
   // Authentication endpoints
   async login(data: LoginRequest): Promise<AuthResponse> {
     const formData = new URLSearchParams();
-    formData.append('username', data.username);
+    formData.append('username', data.email); // OAuth2 uses 'username' field but we pass email
     formData.append('password', data.password);
 
     const response = await this.client.post<AuthResponse>(
-      '/auth/login',
+      '/api/auth/token',
       formData,
       {
         headers: {
@@ -81,7 +81,7 @@ class ApiClient {
 
   async register(data: RegisterRequest): Promise<AuthResponse> {
     const response = await this.client.post<AuthResponse>(
-      '/auth/register',
+      '/api/auth/register',
       data
     );
     this.setToken(response.data.access_token);
@@ -89,7 +89,7 @@ class ApiClient {
   }
 
   async getCurrentUser(): Promise<User> {
-    const response = await this.client.get<User>('/auth/me');
+    const response = await this.client.get<User>('/api/auth/me');
     return response.data;
   }
 
@@ -101,7 +101,7 @@ class ApiClient {
   // Character endpoints
   async chat(messages: Message[]): Promise<{ response: string }> {
     const response = await this.client.post<{ response: string }>(
-      '/characters/1/chat',
+      '/api/characters/1/chat',
       { messages }
     );
     return response.data;
@@ -109,19 +109,19 @@ class ApiClient {
 
   // Diary endpoints
   async getDiaries(limit = 10, offset = 0): Promise<DiaryListResponse> {
-    const response = await this.client.get<DiaryListResponse>('/diaries', {
+    const response = await this.client.get<DiaryListResponse>('/api/diaries', {
       params: { limit, offset },
     });
     return response.data;
   }
 
   async getDiary(id: number): Promise<Diary> {
-    const response = await this.client.get<Diary>(`/diaries/${id}`);
+    const response = await this.client.get<Diary>(`/api/diaries/${id}`);
     return response.data;
   }
 
   async createDiary(date: string, content: string): Promise<Diary> {
-    const response = await this.client.post<Diary>('/diaries', {
+    const response = await this.client.post<Diary>('/api/diaries', {
       date,
       content,
     });
@@ -129,14 +129,14 @@ class ApiClient {
   }
 
   async updateDiary(id: number, content: string): Promise<Diary> {
-    const response = await this.client.put<Diary>(`/diaries/${id}`, {
+    const response = await this.client.put<Diary>(`/api/diaries/${id}`, {
       content,
     });
     return response.data;
   }
 
   async deleteDiary(id: number): Promise<void> {
-    await this.client.delete(`/diaries/${id}`);
+    await this.client.delete(`/api/diaries/${id}`);
   }
 
   isAuthenticated(): boolean {

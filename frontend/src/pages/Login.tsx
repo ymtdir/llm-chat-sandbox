@@ -4,7 +4,7 @@ import { apiClient } from '../api/client';
 import './Login.css';
 
 export default function Login() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,10 +16,10 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await apiClient.login({ username, password });
+      await apiClient.login({ email, password });
       navigate('/chat');
     } catch {
-      setError('ユーザー名またはパスワードが正しくありません');
+      setError('メールアドレスまたはパスワードが正しくありません');
     } finally {
       setLoading(false);
     }
@@ -35,15 +35,15 @@ export default function Login() {
           {error && <div className="auth-error">{error}</div>}
 
           <div className="form-group">
-            <label htmlFor="username">ユーザー名</label>
+            <label htmlFor="email">メールアドレス</label>
             <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="ユーザー名を入力"
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="メールアドレスを入力"
               required
-              autoComplete="username"
+              autoComplete="email"
             />
           </div>
 

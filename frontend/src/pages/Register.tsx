@@ -4,7 +4,7 @@ import { apiClient } from '../api/client';
 import './Login.css';
 
 export default function Register() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,18 +20,18 @@ export default function Register() {
       return;
     }
 
-    if (password.length < 6) {
-      setError('パスワードは6文字以上で入力してください');
+    if (password.length < 8) {
+      setError('パスワードは8文字以上で入力してください');
       return;
     }
 
     setLoading(true);
 
     try {
-      await apiClient.register({ username, password });
+      await apiClient.register({ email, password });
       navigate('/chat');
     } catch {
-      setError('ユーザー名が既に存在するか、登録に失敗しました');
+      setError('メールアドレスが既に存在するか、登録に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -47,15 +47,15 @@ export default function Register() {
           {error && <div className="auth-error">{error}</div>}
 
           <div className="form-group">
-            <label htmlFor="username">ユーザー名</label>
+            <label htmlFor="email">メールアドレス</label>
             <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="ユーザー名を入力"
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="メールアドレスを入力"
               required
-              autoComplete="username"
+              autoComplete="email"
             />
           </div>
 
