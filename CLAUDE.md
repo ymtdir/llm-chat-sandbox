@@ -32,17 +32,26 @@ AI Diary Companion - 会話から自動生成される日記サービス。
 ## コマンド
 
 ```bash
-# バックエンド起動
+# すべてのサービスを起動（PostgreSQL + pgAdmin + FastAPI）
 docker compose up -d
+
+# ログを確認
+docker compose logs -f app
+
+# バックエンドのみ再起動
+docker compose restart app
 
 # テスト実行
 docker compose exec app pytest
 
-# lint
-ruff check app/
+# lint（コンテナ内）
+docker compose exec app ruff check app/
 
-# 型チェック
-mypy app/
+# 型チェック（コンテナ内）
+docker compose exec app mypy app/
+
+# すべてのサービスを停止
+docker compose down
 ```
 
 ## ドキュメント一覧

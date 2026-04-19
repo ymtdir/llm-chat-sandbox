@@ -33,7 +33,7 @@ SECRET_KEY=$(openssl rand -hex 32)
 ### 2. Dockerコンテナの起動
 
 ```bash
-# すべてのサービスを起動
+# すべてのサービスを起動（PostgreSQL + pgAdmin + FastAPI）
 docker compose up
 
 # バックグラウンドで起動
@@ -43,11 +43,17 @@ docker compose up -d
 docker compose up --build
 ```
 
+起動されるサービス:
+
+- **postgres**: PostgreSQL 17データベース
+- **pgadmin**: pgAdmin管理UI
+- **app**: FastAPIバックエンドアプリケーション
+
 ### 3. データベースマイグレーション（初回のみ）
 
 ```bash
 # マイグレーションの実行
-docker compose --profile migrate up migrate
+docker compose exec app alembic upgrade head
 ```
 
 ### 4. アクセス確認
@@ -55,6 +61,7 @@ docker compose --profile migrate up migrate
 - **API**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
 - **Health Check**: http://localhost:8000/health
+- **pgAdmin**: http://localhost:5050 (admin@example.com / admin)
 
 ## 開発時の操作
 
@@ -163,27 +170,50 @@ docker compose up
 
 ## Docker環境の構成
 
+### サービス構成
+
+| サービス名 | イメージ               | ポート | 説明                   |
+| ---------- | ---------------------- | ------ | ---------------------- |
+| postgres   | postgres:17-alpine     | 5432   | PostgreSQLデータベース |
+| pgadmin    | dpage/pgadmin4:latest  | 5050   | データベース管理UI     |
+| app        | (Dockerfileからビルド) | 8000   | FastAPIバックエンド    |
+
 ### 使用イメージ
 
 - **Python**: python:3.13-slim (アプリケーション)
 - **PostgreSQL**: postgres:17-alpine (データベース)
+- **pgAdmin**: dpage/pgadmin4:latest (管理UI)
 
 ### ボリューム
 
 - `postgres_data`: PostgreSQLのデータ永続化
-- ソースコードはホストとコンテナ間でマウント（ホットリロード対応）
+- `./app:/app/app`: アプリケーションコード（ホットリロード対応）
+- `./alembic:/app/alembic`: マイグレーションファイル
+- `./scripts:/app/scripts`: スクリプトファイル
 
 ### ネットワーク
 
 - `ai_diary_network`: 内部通信用ブリッジネットワーク
+  - コンテナ間通信では、サービス名（`postgres`, `app`）をホスト名として使用
 
 ### 環境変数
 
 Docker Compose内で自動設定される環境変数：
 
-- `DATABASE_URL`: PostgreSQL接続URL（コンテナ間通信用）
-- `ASYNC_DATABASE_URL`: 非同期接続URL
-- `TEST_DATABASE_URL`: テスト用データベースURL
+| 環境変数名           | 用途                                        | 値の例                                         |
+| -------------------- | ------------------------------------------- | ---------------------------------------------- |
+| `DATABASE_URL`       | マイグレーション用DB接続URL                 | `postgresql+psycopg://user:pass@postgres:5432` |
+| `ASYNC_DATABASE_URL` | アプリケーション実行時のDB接続URL（非同期） | `postgresql+psycopg://user:pass@postgres:5432` |
+| `SECRET_KEY`         | JWT署名用秘密鍵                             | `.env`から読み込み                             |
+| `GROQ_API_KEY`       | Groq API認証キー                            | `.env`から読み込み                             |
+| `CORS_ORIGINS`       | CORS許可オリジン                            | `http://localhost:3000`など                    |
+
+**重要な注意点:**
+
+- ローカル開発環境では `.env` ファイルで `localhost:5432` を指定
+- Docker Compose内では環境変数で `postgres:5432` に上書き（コンテナ間通信用）
+- `DATABASE_URL` は主にAlembicマイグレーションで使用
+- `ASYNC_DATABASE_URL` はアプリケーション実行時にSQLAlchemyのasync engineで使用
 
 ## 本番環境への注意事項
 
