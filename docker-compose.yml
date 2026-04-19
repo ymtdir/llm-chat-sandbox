@@ -37,6 +37,37 @@ services:
     networks:
       - ai_diary_network
 
+  # FastAPI バックエンドアプリケーション
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai_diary_companion_app
+    environment:
+      # データベース接続（コンテナ内からはpostgresホストを使用）
+      ASYNC_DATABASE_URL: postgresql+psycopg://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-ai_diary_companion}
+      DATABASE_URL: postgresql+psycopg://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-ai_diary_companion}
+      # その他の環境変数は.envから読み込み
+      SECRET_KEY: ${SECRET_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEBUG: ${DEBUG:-true}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+    volumes:
+      # ホットリロード用にソースコードをマウント
+      - ./app:/app/app
+      - ./alembic:/app/alembic
+      - ./alembic.ini:/app/alembic.ini
+      - ./scripts:/app/scripts
+    ports:
+      - '8000:8000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ai_diary_network
+
 networks:
   ai_diary_network:
     driver: bridge
