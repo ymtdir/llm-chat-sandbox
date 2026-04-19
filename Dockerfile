@@ -17,8 +17,8 @@ RUN pip install --no-cache-dir --upgrade pip
 # アプリケーションコードをコピー（editable install は app/ を必要とする）
 COPY . .
 
-# 依存関係をインストール
-RUN pip install --no-cache-dir -e .
+# 依存関係をインストール（開発ツール含む）
+RUN pip install --no-cache-dir -e ".[dev]"
 
 # ポート8000を公開
 EXPOSE 8000
