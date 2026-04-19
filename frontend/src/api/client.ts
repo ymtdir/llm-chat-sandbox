@@ -61,19 +61,10 @@ class ApiClient {
 
   // Authentication endpoints
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const formData = new URLSearchParams();
-    formData.append('username', data.email); // OAuth2 uses 'username' field but we pass email
-    formData.append('password', data.password);
-
-    const response = await this.client.post<AuthResponse>(
-      '/api/auth/token',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      }
-    );
+    const response = await this.client.post<AuthResponse>('/api/auth/token', {
+      email: data.email,
+      password: data.password,
+    });
 
     this.setToken(response.data.access_token);
     return response.data;
@@ -111,18 +102,38 @@ class ApiClient {
     );
   }
 
-  private conversationId: number | null = null;
-
   async getOrCreateConversation(characterId: number): Promise<{ id: number }> {
-    // 会話が存在しない場合は作成
-    if (!this.conversationId) {
-      const response = await this.client.post<{ id: number }>(
-        '/api/conversations',
-        { character_id: characterId }
-      );
-      this.conversationId = response.data.id;
+    // localStorageから会話IDを取得
+    const storedConversationId = localStorage.getItem(
+      `conversation_${characterId}`
+    );
+
+    if (storedConversationId) {
+      // 既存の会話IDがある場合は、それが有効か確認
+      try {
+        await this.client.get(
+          `/api/conversations/${storedConversationId}/messages`
+        );
+        return { id: parseInt(storedConversationId, 10) };
+      } catch (error) {
+        // 会話が見つからない場合は、localStorageから削除
+        localStorage.removeItem(`conversation_${characterId}`);
+      }
     }
-    return { id: this.conversationId };
+
+    // 会話が存在しない場合は新規作成
+    const response = await this.client.post<{ id: number }>(
+      '/api/conversations',
+      { character_id: characterId }
+    );
+
+    // localStorageに保存
+    localStorage.setItem(
+      `conversation_${characterId}`,
+      response.data.id.toString()
+    );
+
+    return { id: response.data.id };
   }
 
   async sendMessage(
@@ -137,10 +148,26 @@ class ApiClient {
   }
 
   async getMessages(conversationId: number): Promise<Message[]> {
-    const response = await this.client.get<{ messages: Message[] }>(
+    interface BackendMessage {
+      id: number;
+      conversation_id: number;
+      content: string;
+      sender_type: 'user' | 'character';
+      sender_id: number;
+      sent_at: string;
+    }
+
+    const response = await this.client.get<{ messages: BackendMessage[] }>(
       `/api/conversations/${conversationId}/messages`
     );
-    return response.data.messages;
+
+    // Convert backend format to frontend format
+    return response.data.messages.map((msg) => ({
+      role:
+        msg.sender_type === 'user' ? ('user' as const) : ('assistant' as const),
+      content: msg.content,
+      timestamp: msg.sent_at,
+    }));
   }
 
   // Diary endpoints

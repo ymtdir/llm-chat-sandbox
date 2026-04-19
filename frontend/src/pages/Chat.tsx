@@ -98,7 +98,6 @@ export default function Chat() {
 
     setMessages((prev) => [...prev, userMessage]);
     setLoading(true);
-    setIsTyping(true);
 
     try {
       await apiClient.sendMessage(conversationId, content);
