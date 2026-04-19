@@ -1,58 +1,127 @@
-import { useState, useEffect, useRef, FormEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
-import type { Message } from '../types/diary';
+import type { Message, WebSocketMessage } from '../types/diary';
+import MessageList from '../components/MessageList';
+import MessageInput from '../components/MessageInput';
 import './Chat.css';
+
+const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
+const DEFAULT_CHARACTER_ID = 1;
 
 export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
+  const [conversationId, setConversationId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [ws, setWs] = useState<WebSocket | null>(null);
   const navigate = useNavigate();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  // Initialize conversation and WebSocket
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    let websocket: WebSocket | null = null;
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || loading) return;
+    const initializeChat = async () => {
+      try {
+        // Get or create conversation
+        const { id } =
+          await apiClient.getOrCreateConversation(DEFAULT_CHARACTER_ID);
+        setConversationId(id);
+
+        // Load message history
+        const history = await apiClient.getMessages(id);
+        setMessages(history);
+
+        // Setup WebSocket connection
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          // TODO: Get actual user_id from auth token
+          const userId = 1; // Placeholder
+          websocket = new WebSocket(`${WS_URL}/ws/${userId}?token=${token}`);
+
+          websocket.onopen = () => {
+            console.log('WebSocket connected');
+          };
+
+          websocket.onmessage = (event) => {
+            const wsMessage: WebSocketMessage = JSON.parse(event.data);
+
+            if (wsMessage.type === 'message:new' && wsMessage.data) {
+              setMessages((prev) => [
+                ...prev,
+                {
+                  role: wsMessage.data!.role,
+                  content: wsMessage.data!.content,
+                  timestamp:
+                    wsMessage.data!.timestamp || new Date().toISOString(),
+                },
+              ]);
+              setIsTyping(false);
+            } else if (wsMessage.type === 'message:typing') {
+              setIsTyping(true);
+            }
+          };
+
+          websocket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+          };
+
+          websocket.onclose = () => {
+            console.log('WebSocket disconnected');
+          };
+
+          setWs(websocket);
+        }
+      } catch (err) {
+        console.error('Failed to initialize chat:', err);
+      }
+    };
+
+    initializeChat();
+
+    // Cleanup WebSocket on unmount
+    return () => {
+      if (websocket) {
+        websocket.close();
+      }
+    };
+  }, []);
+
+  const handleSendMessage = async (content: string) => {
+    if (!conversationId || loading) return;
 
     const userMessage: Message = {
       role: 'user',
-      content: input.trim(),
+      content,
+      timestamp: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput('');
     setLoading(true);
+    setIsTyping(true);
 
     try {
-      const response = await apiClient.chat([...messages, userMessage]);
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: response.response,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
+      await apiClient.sendMessage(conversationId, content);
+      // AI response will come via WebSocket
     } catch (err) {
-      console.error('Chat error:', err);
+      console.error('Send message error:', err);
       const errorMessage: Message = {
         role: 'assistant',
         content:
           '申し訳ございません。エラーが発生しました。もう一度お試しください。',
+        timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
+      setIsTyping(false);
     } finally {
       setLoading(false);
     }
   };
 
   const handleLogout = () => {
+    if (ws) {
+      ws.close();
+    }
     apiClient.logout();
   };
 
@@ -77,57 +146,13 @@ export default function Chat() {
 
       <main className="chat-main">
         <div className="container">
-          <div className="chat-messages">
-            {messages.length === 0 && (
-              <div className="chat-empty">
-                <h3>会話を始めましょう</h3>
-                <p>
-                  あなたの思いを共有してください。日記の作成をお手伝いします。
-                </p>
-              </div>
-            )}
-
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`chat-message chat-message-${message.role}`}
-              >
-                <div className="chat-message-content">{message.content}</div>
-              </div>
-            ))}
-
-            {loading && (
-              <div className="chat-message chat-message-assistant">
-                <div className="chat-message-content chat-loading">
-                  考え中...
-                </div>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
+          <MessageList messages={messages} isTyping={isTyping} />
         </div>
       </main>
 
       <footer className="chat-footer">
         <div className="container">
-          <form onSubmit={handleSubmit} className="chat-input-form">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="今日のことを聞かせてください..."
-              className="chat-input"
-              disabled={loading}
-            />
-            <button
-              type="submit"
-              className="button-primary"
-              disabled={loading || !input.trim()}
-            >
-              送信
-            </button>
-          </form>
+          <MessageInput onSend={handleSendMessage} disabled={loading} />
         </div>
       </footer>
     </div>
