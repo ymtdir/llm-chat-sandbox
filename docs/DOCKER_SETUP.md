@@ -200,11 +200,20 @@ docker compose up
 
 Docker Compose内で自動設定される環境変数：
 
-- `DATABASE_URL`: PostgreSQL接続URL（コンテナ間通信では`postgres:5432`を使用）
-- `ASYNC_DATABASE_URL`: 非同期接続URL
-- `SECRET_KEY`: JWT署名用秘密鍵
-- `GROQ_API_KEY`: Groq API認証キー
-- `CORS_ORIGINS`: CORS許可オリジン
+| 環境変数名           | 用途                                        | 値の例                                         |
+| -------------------- | ------------------------------------------- | ---------------------------------------------- |
+| `DATABASE_URL`       | マイグレーション用DB接続URL                 | `postgresql+psycopg://user:pass@postgres:5432` |
+| `ASYNC_DATABASE_URL` | アプリケーション実行時のDB接続URL（非同期） | `postgresql+psycopg://user:pass@postgres:5432` |
+| `SECRET_KEY`         | JWT署名用秘密鍵                             | `.env`から読み込み                             |
+| `GROQ_API_KEY`       | Groq API認証キー                            | `.env`から読み込み                             |
+| `CORS_ORIGINS`       | CORS許可オリジン                            | `http://localhost:3000`など                    |
+
+**重要な注意点:**
+
+- ローカル開発環境では `.env` ファイルで `localhost:5432` を指定
+- Docker Compose内では環境変数で `postgres:5432` に上書き（コンテナ間通信用）
+- `DATABASE_URL` は主にAlembicマイグレーションで使用
+- `ASYNC_DATABASE_URL` はアプリケーション実行時にSQLAlchemyのasync engineで使用
 
 ## 本番環境への注意事項
 
