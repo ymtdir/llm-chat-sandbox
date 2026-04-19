@@ -21,12 +21,12 @@ from app.schemas.auth import FcmTokenUpdate, Token, UserCreate, UserLogin, UserR
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
 async def register(
     user_data: UserCreate,
     db: AsyncSession = Depends(get_db),
-) -> User:
-    """Register a new user."""
+) -> dict[str, str]:
+    """Register a new user and return JWT token."""
     # Check if user already exists
     result = await db.execute(select(User).where(User.email == user_data.email))
     existing_user = result.scalar_one_or_none()
@@ -48,7 +48,14 @@ async def register(
     await db.commit()
     await db.refresh(new_user)
 
-    return new_user
+    # Create access token for the new user
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": str(new_user.id)},
+        expires_delta=access_token_expires,
+    )
+
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.post("/login", response_model=Token)
