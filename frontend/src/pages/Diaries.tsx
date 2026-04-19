@@ -69,7 +69,7 @@ export default function Diaries() {
               onClick={() => navigate('/chat')}
               className="button-primary"
             >
-              新規作成
+              トーク画面へ
             </button>
             <button onClick={handleLogout} className="button-dark">
               ログアウト
@@ -100,7 +100,7 @@ export default function Diaries() {
                 onClick={() => navigate('/chat')}
                 className="button-primary"
               >
-                書き始める
+                トーク画面へ
               </button>
             </div>
           )}
