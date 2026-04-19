@@ -1,6 +1,16 @@
 export interface Message {
   role: 'user' | 'assistant';
   content: string;
+  timestamp?: string;
+}
+
+export interface WebSocketMessage {
+  type: 'message:new' | 'message:typing';
+  data?: {
+    role: 'assistant';
+    content: string;
+    timestamp?: string;
+  };
 }
 
 export interface Diary {
