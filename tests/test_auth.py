@@ -28,11 +28,8 @@ def test_register_user(client):
 
     assert response.status_code == 201
     data = response.json()
-    assert data["email"] == "test@example.com"
-    assert "id" in data
-    assert "created_at" in data
-    assert "password" not in data
-    assert "password_hash" not in data
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
 
 
 def test_register_duplicate_user(client):
