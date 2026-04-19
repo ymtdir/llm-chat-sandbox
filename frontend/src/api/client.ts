@@ -115,7 +115,7 @@ class ApiClient {
           `/api/conversations/${storedConversationId}/messages`
         );
         return { id: parseInt(storedConversationId, 10) };
-      } catch (error) {
+      } catch {
         // 会話が見つからない場合は、localStorageから削除
         localStorage.removeItem(`conversation_${characterId}`);
       }

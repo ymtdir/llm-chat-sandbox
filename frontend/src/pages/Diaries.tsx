@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import type { Diary } from '../types/diary';
+import DiaryDetail from '../components/DiaryDetail';
 import './Diaries.css';
 
 export default function Diaries() {
   const [diaries, setDiaries] = useState<Diary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedDiary, setSelectedDiary] = useState<Diary | null>(null);
   const navigate = useNavigate();
 
   const loadDiaries = async () => {
@@ -40,6 +42,21 @@ export default function Diaries() {
       month: 'long',
       day: 'numeric',
     });
+  };
+
+  const getContentPreview = (content: string, maxLength = 150) => {
+    if (content.length <= maxLength) {
+      return content;
+    }
+    return content.substring(0, maxLength) + '...';
+  };
+
+  const handleCardClick = (diary: Diary) => {
+    setSelectedDiary(diary);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedDiary(null);
   };
 
   return (
@@ -91,15 +108,23 @@ export default function Diaries() {
           {!loading && !error && diaries.length > 0 && (
             <div className="diaries-grid">
               {diaries.map((diary) => (
-                <div key={diary.id} className="diary-card">
+                <div
+                  key={diary.id}
+                  className="diary-card"
+                  onClick={() => handleCardClick(diary)}
+                >
                   <div className="diary-date">{formatDate(diary.date)}</div>
-                  <div className="diary-content">{diary.content}</div>
+                  <div className="diary-content-preview">
+                    {getContentPreview(diary.content)}
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
       </main>
+
+      <DiaryDetail diary={selectedDiary} onClose={handleCloseDetail} />
     </div>
   );
 }
