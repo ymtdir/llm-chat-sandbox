@@ -28,7 +28,8 @@ AI Diary Companionは、AIキャラクターとの自然な会話を通じて自
 ### フロントエンド
 
 - **言語**: TypeScript
-- **フレームワーク**: React
+- **フレームワーク**: React 19
+- **ビルドツール**: Vite
 - **ランタイム**: Node.js 22.x LTS
 
 ### インフラ
@@ -127,6 +128,14 @@ pgAdminからDBへの接続情報：
 alembic upgrade head
 ```
 
+#### 6. 初期データの投入
+
+```bash
+python scripts/seed_initial_character.py
+```
+
+このスクリプトは初期キャラクターデータを投入します。
+
 ### 開発サーバーの起動
 
 #### バックエンド (FastAPI)
@@ -141,16 +150,17 @@ uvicorn app.main:app --reload
 - API ドキュメント (Swagger UI): http://localhost:8000/docs
 - API ドキュメント (ReDoc): http://localhost:8000/redoc
 
-#### フロントエンド（今後実装）
+#### フロントエンド
 
 ```bash
 cd frontend
+npm install  # 初回のみ
 npm run dev
 ```
 
 アクセス先:
 
-- フロントエンド: http://localhost:3000
+- フロントエンド: http://localhost:5173
 
 ## テスト
 
@@ -191,10 +201,25 @@ llm-chat-sandbox/
 │   ├── models/              # SQLAlchemyモデル（データレイヤー）
 │   ├── schemas/             # Pydanticスキーマ（バリデーション）
 │   ├── api/                 # APIレイヤー
-│   │   └── routes/          # エンドポイント定義
-│   └── services/            # サービスレイヤー（ビジネスロジック）
-├── alembic/                 # マイグレーション
+│   │   ├── routes/          # エンドポイント定義
+│   │   └── websocket.py     # WebSocket接続管理
+│   ├── services/            # サービスレイヤー（ビジネスロジック）
+│   ├── repositories/        # リポジトリレイヤー（データアクセス）
+│   ├── domain/              # ドメインロジック
+│   └── scheduler/           # スケジューラー（日記生成等）
+├── frontend/                # フロントエンドアプリケーション（React）
+│   ├── src/
+│   │   ├── pages/           # ページコンポーネント
+│   │   ├── components/      # 再利用可能なコンポーネント
+│   │   ├── api/             # API クライアント
+│   │   └── types/           # TypeScript型定義
+│   ├── package.json         # Node.js 依存関係
+│   └── vite.config.ts       # Vite設定
+├── alembic/                 # データベースマイグレーション
 ├── tests/                   # テストコード
+├── scripts/                 # ユーティリティスクリプト
+│   └── seed_initial_character.py  # 初期データ投入
+├── docs/                    # 技術ドキュメント
 ├── docker-compose.yml       # DB・pgAdmin用
 ├── .env                     # 環境変数（gitignore済み）
 ├── pyproject.toml           # Python依存関係・設定
