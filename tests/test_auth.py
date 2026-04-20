@@ -28,11 +28,8 @@ def test_register_user(client):
 
     assert response.status_code == 201
     data = response.json()
-    assert data["email"] == "test@example.com"
-    assert "id" in data
-    assert "created_at" in data
-    assert "password" not in data
-    assert "password_hash" not in data
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
 
 
 def test_register_duplicate_user(client):
@@ -192,3 +189,36 @@ def test_fcm_token_update_authorized(client):
 
     assert response.status_code == 200
     assert "success" in response.json()["message"].lower()
+
+
+def test_get_current_user_info(client):
+    """Test /me endpoint to get current user information."""
+    # Register user
+    register_response = client.post(
+        "/api/auth/register",
+        json={
+            "email": "me@example.com",
+            "password": "password123",
+        },
+    )
+    token = register_response.json()["access_token"]
+
+    # Get current user info
+    response = client.get(
+        "/api/auth/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["email"] == "me@example.com"
+    assert "id" in data
+    assert "created_at" in data
+    assert "password" not in data
+    assert "password_hash" not in data
+
+
+def test_get_current_user_unauthorized(client):
+    """Test /me endpoint without authentication."""
+    response = client.get("/api/auth/me")
+    assert response.status_code == 401
