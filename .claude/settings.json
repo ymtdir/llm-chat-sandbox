@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(setup-project)",
+      "Skill(requirements-definition)",
+      "Skill(basic-design)",
+      "Skill(detailed-design)",
+      "Skill(development-guide)",
+      "Skill(review-doc)"
+    ]
+  },
+  "skills": {
+    "allowed": [
+      "setup-project",
+      "requirements-definition",
+      "basic-design",
+      "detailed-design",
+      "development-guide",
+      "review-doc"
+    ]
+  }
+}

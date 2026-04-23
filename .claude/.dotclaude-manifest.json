@@ -1,0 +1,40 @@
+{
+  "packs": {
+    "docs-toolkit": {
+      "files": [
+        "agents/doc-reviewer.md",
+        "skills/setup-project",
+        "skills/requirements-definition",
+        "skills/basic-design",
+        "skills/detailed-design",
+        "skills/development-guide",
+        "skills/review-doc",
+        "rules/document-generation-guide.md",
+        "rules/commit-conventions.md"
+      ],
+      "settings": {
+        "permissions": {
+          "allow": [
+            "Skill(setup-project)",
+            "Skill(requirements-definition)",
+            "Skill(basic-design)",
+            "Skill(detailed-design)",
+            "Skill(development-guide)",
+            "Skill(review-doc)"
+          ]
+        },
+        "skills": {
+          "allowed": [
+            "setup-project",
+            "requirements-definition",
+            "basic-design",
+            "detailed-design",
+            "development-guide",
+            "review-doc"
+          ]
+        }
+      }
+    }
+  },
+  "base_settings": {}
+}
