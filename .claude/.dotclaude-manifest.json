@@ -34,6 +34,60 @@
           ]
         }
       }
+    },
+    "github-toolkit": {
+      "files": [
+        "agents/pr-reviewer.md",
+        "skills/create-pr",
+        "skills/review-pr",
+        "skills/create-issue",
+        "skills/resolve-issue",
+        "skills/init-issues",
+        "rules/label-definitions.md",
+        "rules/commit-conventions.md"
+      ],
+      "settings": {
+        "permissions": {
+          "allow": [
+            "Bash(gh:*)",
+            "Skill(create-issue)",
+            "Skill(resolve-issue)",
+            "Skill(create-pr)",
+            "Skill(review-pr)",
+            "Skill(init-issues)"
+          ],
+          "ask": [
+            "Bash(git push:*)"
+          ]
+        },
+        "sandbox": {
+          "network": {
+            "allowedDomains": [
+              "github.com"
+            ]
+          }
+        },
+        "enabledPlugins": {
+          "code-review@claude-plugins-official": true
+        },
+        "extraKnownMarketplaces": {
+          "claude-plugins-official": {
+            "source": {
+              "source": "git",
+              "url": "https://github.com/anthropics/claude-plugins-official.git"
+            }
+          }
+        },
+        "skills": {
+          "allowed": [
+            "create-issue",
+            "resolve-issue",
+            "create-pr",
+            "review-pr",
+            "init-issues"
+          ]
+        }
+      }
     }
   },
   "base_settings": {}

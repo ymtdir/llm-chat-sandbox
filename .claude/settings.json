@@ -1,22 +1,54 @@
 {
+  "enabledPlugins": {
+    "code-review@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/anthropics/claude-plugins-official.git"
+      }
+    }
+  },
   "permissions": {
     "allow": [
-      "Skill(setup-project)",
-      "Skill(requirements-definition)",
+      "Bash(gh:*)",
       "Skill(basic-design)",
+      "Skill(create-issue)",
+      "Skill(create-pr)",
       "Skill(detailed-design)",
       "Skill(development-guide)",
-      "Skill(review-doc)"
+      "Skill(init-issues)",
+      "Skill(requirements-definition)",
+      "Skill(resolve-issue)",
+      "Skill(review-doc)",
+      "Skill(review-pr)",
+      "Skill(setup-project)"
+    ],
+    "ask": [
+      "Bash(git push:*)"
     ]
+  },
+  "sandbox": {
+    "network": {
+      "allowedDomains": [
+        "github.com"
+      ]
+    }
   },
   "skills": {
     "allowed": [
-      "setup-project",
-      "requirements-definition",
       "basic-design",
+      "create-issue",
+      "create-pr",
       "detailed-design",
       "development-guide",
-      "review-doc"
+      "init-issues",
+      "requirements-definition",
+      "resolve-issue",
+      "review-doc",
+      "review-pr",
+      "setup-project"
     ]
   }
 }
